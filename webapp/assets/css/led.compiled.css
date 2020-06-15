@@ -1,0 +1,25 @@
+.led {
+  animation-name: blink;
+  animation-duration: 1s;
+  animation-iteration-count: infinite;
+}
+
+@keyframes blink {
+  0% {
+    color: #44ff05;
+  }
+  50% {
+    color: #b8ffa1;
+  }
+  100% {
+    color: #44ff05;
+  }
+}
+
+#body {
+  -webkit-app-region: drag;
+}
+
+button {
+  -webkit-app-region: no-drag;
+}

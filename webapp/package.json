@@ -1,0 +1,20 @@
+{
+    "name": "test1",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "dependencies": {
+        "electron-reload": "^1.5.0",
+        "jquery": "^3.5.0",
+        "mbed-cloud-sdk": "^2.6.5"
+    },
+    "devDependencies": {
+        "electron": "^8.2.0"
+    },
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "electron . & ./launch_pelion_client.sh"
+    },
+    "author": "",
+    "license": "ISC"
+}

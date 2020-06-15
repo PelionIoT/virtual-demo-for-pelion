@@ -1,0 +1,26 @@
+.card {
+    border: none;
+    background-color: rgba(245, 245, 245, 0);
+}
+
+.btn.focus,
+.btn:focus {
+    outline: 0;
+    box-shadow: none!important;
+}
+
+.btn-push {
+    border: none;
+    font-family: 'Electrolize';
+    width: 80px;
+    color: rgb(238, 211, 211) !important;
+    border-color: rgb(54, 50, 50);
+}
+
+.visible {
+    visibility: visible;
+}
+
+.invisible {
+    visibility: hidden;
+}

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html style="width: 630px;height: 393px;max-height: 393px;max-width: 630px;">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Arm Pelion</title>
+    <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Electrolize">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Gruppo">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Iceland">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lekton">
+    <link rel="stylesheet" href="assets/fonts/fontawesome-all.min.css">
+    <link rel="stylesheet" href="assets/css/animsition.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" />
+    <link rel="stylesheet" href="assets/css/led.compiled.css">
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <script>
+        window.jQuery = window.$ = require('jquery');
+    </script>
+    <!-- Required to uncomment for electron use -->
+    <script src="assets/bootstrap/js/bootstrap.min.js "></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/js/select2.min.js"></script>
+    <script src="assets/js/animsition.min.js"></script>
+    <script src="assets/js/select2-app.js "></script>
+    <script src="assets/js/script.js "></script>
+</head>
+
+<body id="body" onload="onLoad()" style="background-image: url(&quot;assets/img/Device2.svg&quot;);width: 630px;height: 393px;max-height: 393px;min-height: 393px;background-color: rgb(17,16,16);background-repeat: no-repeat;">
+    <div class="container" style="width: 502px;">
+        <div class="row">
+            <div class="col" style="padding: 0px;">
+                <div class="card d-sm-flex align-items-sm-center" style="background-color: rgba(255,255,255,0);height: 57px;">
+                    <div class="card-body d-sm-flex justify-content-sm-center align-items-sm-center" style="height: auto;padding: 0px;">
+                        <!-- Dropdown -->
+                        <select class="invisible js-example-basic-single " id='selUser' onchange='selectChanged()'>
+                            <option value=" 0 ">Select device ID</option> 
+                        </select>
+                    </div>
+                </div>
+                <div class="card d-sm-flex align-items-sm-center" style="background-color: rgba(255,255,255,0);height: 57px;margin-top: 23px;padding-top: 0px;">
+                    <div class="card-body d-sm-flex justify-content-sm-center align-items-sm-center" style="height: auto;padding: 0px;">
+                        <h4 id="number" onload="generateRandomNumber();" class="d-sm-flex card-title" style="margin: 0px;color: #bad8fc;font-family: Electrolize, sans-serif;font-size: 38px;"></h4>
+                    </div>
+                </div>
+                <div class="card d-sm-flex align-items-sm-center" style="background-color: rgba(255,255,255,0);margin-top: 23px;padding-top: 0px;height: 57px;">
+                    <div class="card-body d-sm-flex justify-content-sm-center align-items-sm-center" style="height: auto;padding: 0px;">
+                        <div class="row" style="margin: 0px;min-width: 165px;width: 358px;">
+                            <div class="invisible col-5 d-sm-flex justify-content-sm-center align-items-sm-center"><button class="btn btn-primary btn-push" type="button" style="background-color: rgb(109,94,78);color: rgb(122,122,122);">RESET</button></div>
+                            <div class="col-2 d-sm-flex justify-content-sm-center align-items-sm-center" style="padding: 0px;"><i class="fas fa-circle led" style="font-size: 30px;color: rgb(68,255,5);"></i></div>
+                            <div class="col-5 d-sm-flex justify-content-sm-center"><button onclick="shakeScript(); shakeButtonAnimation(); " class="btn btn-primary btn-push" type="button" style="background-color: rgb(115,70,60);color: rgb(122,122,122);font-family: Electrolize, sans-serif;">SHAKE</button></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" style="margin: 0px;margin-right: 89px;margin-left: 89px;height: auto;">
+                    <div class="col">
+                        <div class="card d-sm-flex" style="background-color: rgba(255,255,255,0);height: 57px;margin-top: 23px;margin-left: 23px;margin-right: 23px;">
+                            <div class="card-body d-sm-flex" style="height: auto;padding: 0px;min-height: auto;">
+                                <div class="row" style="margin: 0px;min-width: 100%;">
+                                    <div class="col" style="padding: 0px;">
+                                        <p class="text-left" style="color: rgb(0,198,242);font-family: Electrolize, sans-serif;margin-bottom: 5px;">▌Sensor&nbsp;</p>
+                                        <p class="text-left" style="color: rgb(0,198,242);font-family: Electrolize, sans-serif;margin-bottom: 5px;">▌Alerts&nbsp;</p>
+                                        <p class="text-left" style="color: rgb(0,198,242);font-family: Electrolize, sans-serif;margin-bottom: 5px;">▌Firmware</p>
+                                    </div>
+                                    <div class="col" style="padding: 0px;">
+                                        <p class="text-right" style="color: rgb(0,242,111);font-family: Electrolize, sans-serif;margin-bottom: 5px;">Vibration&nbsp;</p>
+                                        <p class="text-right" style="color: rgb(0,242,111);font-family: Electrolize, sans-serif;margin-bottom: 5px;">24</p>
+                                        <p class="text-right" style="color: rgb(0,242,111);font-family: Electrolize, sans-serif;margin-bottom: 5px;">1.421</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/bootstrap/js/bootstrap.min.js"></script>
+    <script src="assets/js/random-num.js"></script>
+</body>
+
+</html>
