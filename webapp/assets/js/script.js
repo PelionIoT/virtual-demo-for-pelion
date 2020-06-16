@@ -5,7 +5,8 @@ console.log("Loaded script.js");
 // These are executed as soon as this file loads, before the HTML body is loaded.
 
 //CHANGE value of FILE to location of file you write to
-const file = '/home/george/repo/device-simulator-linux-client/__x86_x64_NativeLinux_mbedtls/Release/sensor_value.out'
+const file_sensor_value = '../sensor_value.out'
+const file_shake = '../vib.conf'
 
 const ConnectApi = require("mbed-cloud-sdk").ConnectApi;
 const connect = new ConnectApi({
@@ -24,9 +25,22 @@ function shakeButtonAnimation() {
     }, 5000)
 }
 
+var status = "OFF"
 function shakeScript() {
     //add your script here after shake triggered
-
+    //alert("shake shake!!")
+    if(status == "OFF")
+    {
+        status = "ON";
+    }
+    else if(status == "ON")
+    {
+        status = "OFF";
+    }
+    fs.writeFile(file_shake,status,function(err){
+        if( err ) throw err;
+        console.log('Saved!');
+    });
 }
 
 function onLoad() {
@@ -67,10 +81,10 @@ function selectChanged() {
     }
 }
 
-fs.watch(file, (event, filename) => {
+fs.watch(file_sensor_value, (event, filename) => {
     if (filename && event === "change") {
         console.log("File changed")
-        fs.readFile(file, 'utf-8', (err, data) => {
+        fs.readFile(file_sensor_value, 'utf-8', (err, data) => {
                 if (err) throw err;
 
                 // Converting Raw Buffer to text 
@@ -81,44 +95,7 @@ fs.watch(file, (event, filename) => {
             //document.getElementById("number").innerHTML = data;
     }
 });
-/*
-fs.readFile('Input.txt', 'utf-8', (err, data) => { 
-    if (err) throw err; 
-  
-    // Converting Raw Buffer to text 
-    // data using tostring function. 
-	console.log(data); 
-	document.getElementById("number").innerHTML = data;
-})*/
 
-/*
-function setObserver(deviceId) {
-	// args: deviceId should be "*" or some deviceId like "001234567890123456789000"
-	console.log("setObserver function");
-	//Try to delete device subscriptions - not working for the moment
-	connect.deletePresubscriptions()
-	connect.deleteDeviceSubscriptions(previous_id);
-
-
-	// Set the 'observer' variable to this new subscription to a given deviceId.
-	observer = connect.subscribe.resourceValues({
-		deviceId: deviceId,
-	});
-
-	// Add a listener that executes a function every time the observer returns a value
-	observer.addListener(value => {
-		console.log("Observer returned value: ", value.payload);
-		payload = value.payload;
-		
-		//If the payload is non-integer - it has to be a color and call setButtonColor to change button color
-		// Else put the number returned by the observer in the text box with the id "number" 
-		if(isNaN(payload) == true)
-			setButtonColor(payload)
-		else
-			document.getElementById("number").innerHTML = payload;
-	});
-}
-*/
 
 /*
 	Notes:
