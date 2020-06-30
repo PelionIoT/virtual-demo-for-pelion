@@ -19,9 +19,10 @@ var previous_id = "";
 
 function shakeButtonAnimation() {
     //animate button
-    $("button").addClass("wobble animated infinite");
+    
+    $("#shakeButtonId").addClass("wobble animated infinite");
     setTimeout(function() {
-        $("button").removeClass("wobble animated infinite");
+        $("#shakeButtonId").removeClass("wobble animated infinite");
     }, 5000)
 }
 
@@ -41,6 +42,12 @@ function shakeScript() {
         if( err ) throw err;
         console.log('Saved!');
     });
+}
+
+
+function securityScript(){
+    $(".tick-box").removeClass("invisible")
+    $(".tick-box").addClass("visible");
 }
 
 function onLoad() {
