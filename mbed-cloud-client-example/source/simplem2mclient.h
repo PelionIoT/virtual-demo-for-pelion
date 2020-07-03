@@ -29,6 +29,10 @@
 #include "resource.h"
 #include "application_init.h"
 #include "factory_configurator_client.h"
+#include <fstream>
+#include <iostream>
+#include <string>
+using namespace std;
 
 #ifdef MBED_CLOUD_CLIENT_USER_CONFIG_FILE
 #include MBED_CLOUD_CLIENT_USER_CONFIG_FILE
@@ -105,6 +109,7 @@ public:
 
     void client_registered() {
         _registered = true;
+        ofstream outfile;
         printf("Client registered\r\n");
         _error_count = 0;
         static const ConnectorClientEndpointInfo* endpoint = NULL;
@@ -117,6 +122,10 @@ public:
                 printf("Endpoint Name: %s\r\n", endpoint->endpoint_name.c_str());
 #endif
                 printf("Device ID: %s\r\n", endpoint->internal_endpoint_name.c_str());
+                outfile.open("../../../device.id");
+                outfile << endpoint->internal_endpoint_name.c_str() << endl;
+                outfile.close();
+
             }
         }
 #ifdef MBED_HEAP_STATS_ENABLED
