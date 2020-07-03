@@ -8,11 +8,7 @@ console.log("Loaded script.js");
 const file_sensor_value = '../sensor_value.out'
 const file_device_id = '../device.id'
 const file_shake = '../vib.conf'
-
-const ConnectApi = require("mbed-cloud-sdk").ConnectApi;
-const connect = new ConnectApi({
-    autostartNotifications: true,
-});
+fs.truncate(file_device_id, 0, function(){console.log('File contents erased')})
 
 let observer; // To be initialised later.
 let payload = ""
@@ -113,6 +109,8 @@ fs.watch(file_device_id, (event, filename) => {
                 // Converting Raw Buffer to text 
                 // data using tostring function. 
                 console.log(data);
+                // get the last 6 chars of the DeviceID
+                data = data.substr(data.length - 6)
                 document.getElementById("deviceID").innerHTML = data;
             })
             //document.getElementById("number").innerHTML = data;
