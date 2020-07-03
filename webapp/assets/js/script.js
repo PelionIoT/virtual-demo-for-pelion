@@ -6,6 +6,7 @@ console.log("Loaded script.js");
 
 //CHANGE value of FILE to location of file you write to
 const file_sensor_value = '../sensor_value.out'
+const file_device_id = '../device.id'
 const file_shake = '../vib.conf'
 
 const ConnectApi = require("mbed-cloud-sdk").ConnectApi;
@@ -98,6 +99,21 @@ fs.watch(file_sensor_value, (event, filename) => {
                 // data using tostring function. 
                 console.log(data);
                 document.getElementById("number").innerHTML = data;
+            })
+            //document.getElementById("number").innerHTML = data;
+    }
+});
+
+fs.watch(file_device_id, (event, filename) => {
+    if (filename && event === "change") {
+        console.log("File changed")
+        fs.readFile(file_device_id, 'utf-8', (err, data) => {
+                if (err) throw err;
+
+                // Converting Raw Buffer to text 
+                // data using tostring function. 
+                console.log(data);
+                document.getElementById("deviceID").innerHTML = data;
             })
             //document.getElementById("number").innerHTML = data;
     }
