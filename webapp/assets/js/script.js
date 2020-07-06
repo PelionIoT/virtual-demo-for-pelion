@@ -8,7 +8,7 @@ console.log("Loaded script.js");
 const file_sensor_value = '../sensor_value.out'
 const file_device_id = '../device.id'
 const file_shake = '../vib.conf'
-fs.truncate(file_device_id, 0, function(){console.log('File contents erased')})
+fs.writeFile(file_device_id, "Loading", function(){console.log('File contents erased')})
 
 let observer; // To be initialised later.
 let payload = ""
@@ -73,18 +73,6 @@ function setButtonColor(color) {
         console.log("setButtonColor: Unrecognized color")
 }
 
-function selectChanged() {
-    var selectIdElement = document.getElementById("selUser");
-    var deviceId = selectIdElement.options[selectIdElement.selectedIndex].text;
-
-    if (deviceId) {
-        setObserver(deviceId);
-        previous_id = deviceId
-    } else {
-        console.err("Selected a bad deviceId!: ", deviceId);
-    }
-}
-
 fs.watch(file_sensor_value, (event, filename) => {
     if (filename && event === "change") {
         console.log("File changed")
@@ -102,15 +90,15 @@ fs.watch(file_sensor_value, (event, filename) => {
 
 fs.watch(file_device_id, (event, filename) => {
     if (filename && event === "change") {
-        console.log("File changed")
+        console.log("Device ID File changed")
         fs.readFile(file_device_id, 'utf-8', (err, data) => {
                 if (err) throw err;
 
                 // Converting Raw Buffer to text 
                 // data using tostring function. 
                 console.log(data);
-                // get the last 6 chars of the DeviceID
-                data = data.substr(data.length - 6)
+                // get the last 7 chars of the DeviceID
+                data = data.substr(data.length - 7)
                 document.getElementById("deviceID").innerHTML = data;
             })
             //document.getElementById("number").innerHTML = data;
