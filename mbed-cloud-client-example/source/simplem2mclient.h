@@ -122,10 +122,11 @@ public:
                 printf("Endpoint Name: %s\r\n", endpoint->endpoint_name.c_str());
 #endif
                 printf("Device ID: %s\r\n", endpoint->internal_endpoint_name.c_str());
+                printf("Writing device ID to a file\r\n");
                 outfile.open("../../../device.id");
                 outfile << endpoint->internal_endpoint_name.c_str() << endl;
                 outfile.close();
-
+                printf("Writen device ID to a file\r\n");
             }
         }
 #ifdef MBED_HEAP_STATS_ENABLED
