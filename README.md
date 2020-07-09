@@ -40,7 +40,8 @@ and kill with `ctrl-C`.
 Return to the webapp directory in the pelion-virtual-demo parent folder and install electron and the pelion virtual demo GUI:
 ```
 npm install electron -g
-npm install```
+npm install
+```
 
 You're now ready to run the webap using
 `$ npm start`
