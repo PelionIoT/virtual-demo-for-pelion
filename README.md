@@ -65,6 +65,7 @@ $ cd Release
 ./mbedCloudClientExample.elf
 ```
 The application will make an initial link to the Pelion Device Management service and you'll see values being updated on screen. Kill the application with `ctrl-C`
+
 6. The application is now built and is now ready for repeated use of this demo.
 7. Return to the webapp directory in the pelion-device-demo directory and use npm start to run the demo
 ```
