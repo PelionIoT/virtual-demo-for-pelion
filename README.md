@@ -26,7 +26,7 @@ If you have a working build environment then you can go ahead and clone this rep
 Note the python pal-platform deploy stage requires the python modules `requests` and `click`
 ```
 $ cd virtual-demo-for-pelion
-$ cd mbed-cloud-linux-client
+$ cd mbed-cloud-client-example
 $ mbed deploy
 $ python pal-platform/pal-platform.py deploy --target=x86_x64_NativeLinux_mbedtls generate
 $ cd __x86_x64_NativeLinux_mbedtls
@@ -61,7 +61,7 @@ The Ubuntu user account is username: pelion-virtual-demo, password: pelion
 4. Start the terminal app, you can select it from the favourites bar on the left of the Ubuntu desktop
 5. Issue the commands to build and run the client example for the first time
 ```
-$ cd virtual-demo-for-pelion/mbed-cloud-linux-client/__x86_x64_NativeLinux_mbedtls
+$ cd virtual-demo-for-pelion/mbed-cloud-client-example/__x86_x64_NativeLinux_mbedtls
 $ cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=./../pal-platform/Toolchain/GCC/GCC.cmake -DEXTERNAL_DEFINE_FILE=./../define.txt
 $ make mbedCloudClientExample.elf
 $ cd Release
