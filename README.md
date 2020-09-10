@@ -43,7 +43,7 @@ wait for the application's output to show that it has registered with Pelion and
 Return to the webapp directory in the pelion-virtual-demo parent folder and install electron and the pelion virtual demo GUI:
 ```
 $ cd ../../../webapp/
-$ npm install electron -g
+$ sudo npm install electron -g
 $ npm install
 ```
 
