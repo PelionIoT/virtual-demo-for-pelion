@@ -36,14 +36,15 @@ $ make mbedCloudClientExample.elf
 Run the linux client application from this location after compiling
 ```
 $ cd Release
-./mbedCloudClientExample.elf
+$ ./mbedCloudClientExample.elf
 ```
-and kill with `ctrl-C`.
+wait for the application's output to show that it has registered with Pelion and started pushing resource values, then kill with `ctrl-C`.
 
 Return to the webapp directory in the pelion-virtual-demo parent folder and install electron and the pelion virtual demo GUI:
 ```
-npm install electron -g
-npm install
+$ cd ../../../webapp/
+$ npm install electron -g
+$ npm install
 ```
 
 You're now ready to run the webap using
@@ -72,7 +73,7 @@ The application will make an initial link to the Pelion Device Management servic
 6. The application is now built and is now ready for repeated use of this demo.
 7. Return to the webapp directory in the pelion-device-demo directory and use npm start to run the demo
 ```
-$ cd ~/pelion-device-demo/webapp
+$ cd ../../../webapp/
 $ npm start
 ```
 8. When you're ready to stop the demo use `ctrl-C` in the terminal to kill the application
