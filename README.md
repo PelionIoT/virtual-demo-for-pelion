@@ -25,7 +25,7 @@ If you have a working build environment then you can go ahead and clone this rep
 
 Note the python pal-platform deploy stage requires the python modules `requests` and `click`
 ```
-$ cd pelion-virtual-demo
+$ cd virtual-demo-for-pelion
 $ cd mbed-cloud-linux-client
 $ mbed deploy
 $ python pal-platform/pal-platform.py deploy --target=x86_x64_NativeLinux_mbedtls generate
@@ -57,11 +57,11 @@ The Ubuntu user account is username: pelion-virtual-demo, password: pelion
 
 1. Install VirtualBox, download our virtual machine, and import the image to VirtualBox
 2. Run the virtual machine
-3. Download a certificate file from your Pelion Device Management account and copy it to the home/pelion-virtual-demo/pelion-virtual-demo/mbed-cloud-client-example directory. You will overwrite the placeholder mbed_cloud_dev_credentials.c file in the client example directory. **HINT** : You may find it easiest to use the Firebox browser inside the virtual machine to log into the Pelion service and download the certificate file directly inside the Ubuntu virtual machine and copy it to the cloud client example directory.
+3. Download a certificate file from your Pelion Device Management account and copy it to the home/pelion-virtual-demo/virtual-demo-for-pelion/mbed-cloud-client-example directory. You will overwrite the placeholder mbed_cloud_dev_credentials.c file in the client example directory. **HINT** : You may find it easiest to use the Firebox browser inside the virtual machine to log into the Pelion service and download the certificate file directly inside the Ubuntu virtual machine and copy it to the cloud client example directory.
 4. Start the terminal app, you can select it from the favourites bar on the left of the Ubuntu desktop
 5. Issue the commands to build and run the client example for the first time
 ```
-$ cd pelion-virtual-demo/mbed-cloud-linux-client/__x86_x64_NativeLinux_mbedtls
+$ cd virtual-demo-for-pelion/mbed-cloud-linux-client/__x86_x64_NativeLinux_mbedtls
 $ cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=./../pal-platform/Toolchain/GCC/GCC.cmake -DEXTERNAL_DEFINE_FILE=./../define.txt
 $ make mbedCloudClientExample.elf
 $ cd Release
