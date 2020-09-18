@@ -21,7 +21,7 @@ Running the demo will register a device to your account and allow you to see and
 ### Clone and build the demo
 The demo was written to be built and run in a linux environment using the mbed build tools. If you already have a build environment then you can clone this repo, download a certificate file from the Pelion Device Management service and add it to the mbed-cloud-client-example directory, and build the client portion of this demo.
 
-If you have a working build environment then you can go ahead and clone this repo and add your own mbed_cloud_dev_credentials.c file to the mbed-cloud-linux-client directory and then build with the following commands. If you want to create a build environment then you can follow the steps on the [Mbed installers webpage](https://os.mbed.com/docs/mbed-os/v6.0/build-tools/install-and-set-up.html)
+If you have a working build environment then you can go ahead and clone this repo and add your own mbed_cloud_dev_credentials.c file to the mbed-cloud-client-example directory and then build with the following commands. If you want to create a build environment then you can follow the steps on the [Mbed installers webpage](https://os.mbed.com/docs/mbed-os/v6.0/build-tools/install-and-set-up.html)
 
 Note the python pal-platform deploy stage requires the python modules `requests` and `click`
 ```
