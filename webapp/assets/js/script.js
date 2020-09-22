@@ -5,9 +5,9 @@ console.log("Loaded script.js");
 // These are executed as soon as this file loads, before the HTML body is loaded.
 
 //CHANGE value of FILE to location of file you write to
-const file_sensor_value = '../sensor_value.out'
-const file_device_id = '../device.id'
-const file_shake = '../vib.conf'
+const file_sensor_value = '../data/sensor_value.out'
+const file_device_id = '../data/device.id'
+const file_shake = '../data/vib.conf'
 fs.writeFile(file_device_id, "Loading", function(){console.log('File contents erased')})
 
 let observer; // To be initialised later.

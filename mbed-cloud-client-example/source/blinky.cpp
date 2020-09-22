@@ -269,7 +269,7 @@ void write_value(int data)
 {
 	printf("write_value function with value %d\n",data);
 	ofstream outfile;
-    outfile.open("../../../sensor_value.out");
+    outfile.open("../../../data/sensor_value.out");
 	outfile << to_string(data) << endl;
 	outfile.close();
 }
@@ -285,7 +285,7 @@ void Blinky::handle_automatic_increment()
 	char data[10];
     int randomvib = rand() % 19 + (-9);
 	ifstream infile;
-	infile.open("../../../vib.conf");
+	infile.open("../../../data/vib.conf");
 	infile >> data;
 	cout << data << endl;
 	int vib_mode = 0;
