@@ -7,17 +7,28 @@ An example script is provided that gives an example of where the virtual demo ca
 ![Pelion Virtual Demo GUI](images/PDMvirtualDemo.jpg)
 
 ## Using the demo
-We've made this demo available in two forms
-1. Clone this github repo to your local build environment, add your credentials, build and run the client, or
-2. Download our VirtualBox VM that comes preconfigured with the build environment in place, add your credentials, finish the build process and run from the VM
+We've made this demo available in three forms
+1. Use Docker, NPM, and the docker scripts and instructions to build and run the demo on your Windows or Mac machine.
+2. Clone this github repo to your local build environment, add your credentials, build and run the client, or
+3. Download our VirtualBox VM that comes preconfigured with the build environment in place, add your credentials, finish the build process and run from the VM
 
-In both cases you'll need to have a Pelion Device Management account to use with this demo, visit the [Pelion Device Management](portal.mbedcloud.com) site to sign up for an account if you don't already have one.
+In all cases you'll need to have a Pelion Device Management account to use with this demo, visit the [Pelion Device Management](portal.mbedcloud.com) site to sign up for an account if you don't already have one.
 
 Running the demo will register a device to your account and allow you to see and write values to and from the device from the device management service in real time via your Internet link. You can view the Pelion Device Management portal in a browser locally on the same machine that is running the demo, or you can split the demo and the browser accross real and virtual machines, run the portal on one machine and the portal on a second machine, etc.
 
 
 ![Screenshot of demo and browser](images/BrowserScreenShot.png)
 ---
+### Docker
+The demo was created to be built and run in a Linux environment. If you don´t have a linux environment (and don´t want to use our VirtualBox VM to run linux on your machine) then you can use Docker and our docker configuration to run the demo on your machine.
+
+The demo has 2 pieces
+1. An instance of the Pelion device management client that acts as a fake device generating data, and
+2. A node.js webapp that creates the GUI.
+The Docker method of running this demo has the client built and run inside a linux docker image, and the node.js GUI running natively on your machine. All of the build and launch processes for docker are automated, the GUI requires NPM and a graphical library to be installed.
+
+For full details on how to create and run the docker environment read through the specific [Docker.md](Docker.md) instructions.
+
 ### Clone and build the demo
 The demo was written to be built and run in a linux environment using the mbed build tools. If you already have a build environment then you can clone this repo, download a certificate file from the Pelion Device Management service and add it to the mbed-cloud-client-example directory, and build the client portion of this demo.
 
