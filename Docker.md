@@ -17,7 +17,7 @@ Docker can be used as a method to build and run the Pelion client functionality 
 1. Clone this repo from github or download and extract a zip of the repo using the "Code" down arrow at the top of the main repo page [https://github.com/ARMmbed/virtual-demo-for-pelion](https://github.com/ARMmbed/virtual-demo-for-pelion)
 2. Download a certificate from your Pelion Device Management account by creating a new certificate or downloading an existing one from the device management portal [https://portal.mbedcloud.com/identity/certificates/list](https://portal.mbedcloud.com/identity/certificates/list)
 3. Copy the `mbed_cloud_dev_credentials.c` file to the `mbed-cloud-client-example` directory in the copy of the repo on your machine
-4. Install docker - [https://www.docker.com/products/docker-desktop](https://www.npmjs.com/get-npm)
+4. Install docker - [https://www.docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop)
 5. Use a terminal or command prompt to navigate to the root directory of this repo where `Dockerfile` exists and use the command `docker build -t peliondemo .` to build a docker image with the Pelion client using your certificate. NOTE: This command will take 10-30 minutes or more depending on your machine, and will require around 4gb of space on your computer. This is a one-time process, the image will be reused whenever the demo is run without requiring any more docker build stages.
 6. Install NPM and node.js - [https://www.npmjs.com/get-npm](https://www.npmjs.com/get-npm)
 7. Navigate to the webapp directory of the repo and use the command `npm install electron` at the command prompt to install the Electron NPM library required by the GUI.
