@@ -1,14 +1,14 @@
 # Virtual demo for Pelion 
 The virtual demo for Pelion is a software only device that connects to the Pelion Device Management service so that the service can be used and demonstrated without the requirement for any device hardware. The project was specifically created to help discussion of high level device management topics with the constraints of travel due to the Covid-19 pandemic but can be used any time that a screen share demo would be useful when a face to face physical demo isn't possible.
 
-An example script is provided that gives an example of where the virtual demo can be used:
+An example demo walkthrough script is provided that gives an example of where the virtual demo can be used:
 [Pelion-virtual-demo-script.md](Pelion-virtual-demo-script.md)
 
 ![Pelion Virtual Demo GUI](images/PDMvirtualDemo.jpg)
 
 ## Using the demo
 We've made this demo available in three forms
-1. Use Docker, NPM, and the docker scripts and instructions to build and run the demo on your Windows or Mac machine.
+1. Use Docker, NPM, and the docker script files and instructions to build and run the demo on your Windows or Mac machine.
 2. Clone this github repo to your local build environment, add your credentials, build and run the client, or
 3. Download our VirtualBox VM that comes preconfigured with the build environment in place, add your credentials, finish the build process and run from the VM
 
@@ -22,7 +22,7 @@ Running the demo will register a device to your account and allow you to see and
 ### Docker
 The demo was created to be built and run in a Linux environment. If you don´t have a linux environment (and don´t want to use our VirtualBox VM to run linux on your machine) then you can use Docker and our docker configuration to run the demo on your machine.
 
-The demo has 2 pieces
+The demo has 2 components
 1. An instance of the Pelion device management client that acts as a fake device generating data, and
 2. A node.js webapp that creates the GUI.
 The Docker method of running this demo has the client built and run inside a linux docker image, and the node.js GUI running natively on your machine. All of the build and launch processes for docker are automated, the GUI requires NPM and a graphical library to be installed.
