@@ -15,7 +15,7 @@ Welcome to our Pelion device management demo. In this demo we’ll cover the bas
 
 ### Security 
 
-PDM uses a certificate based system to ensure that only authorised devices connect to your account, and that all messaging between the device and the service are encrypted with a key that only your account has access to. I’ll use a virtual device here to take the place of a physical sensor, this device is a basic vibration sensor that takes a reading every 5 seconds.  
+Pelion uses a certificate based system to ensure that only authorised devices connect to your account, and that all messaging between the device and Pelion is encrypted with a key that only your account has access to. I’ll use a virtual device here to take the place of a physical sensor, this device is a basic vibration sensor that takes a reading every 5 seconds.  
 
 
 **At the bottom of the sensor you can see 3 tick boxes for the provisioning state of the device to PDM and the encryption of all messaging between the device and the service. This virtual demo has a certificate from my Pelion account, when the device starts up it take the server information from the certificate and use that to make an initial bootstrap connection. When the first connection is make the device presents the certificate to the service to be validated, the service then validates back to the device so that there is mutual trust between the device and the service. All messaging is encrypted so its not possible to inject false certificates or monitor the connection - we prevent other, unauthorised devices from pushing untrusted data into your IoT system.**
