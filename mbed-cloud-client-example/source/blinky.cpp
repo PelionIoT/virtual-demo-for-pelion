@@ -1,5 +1,5 @@
 // ----------------------------------------------------------------------------
-// Copyright 2018 ARM Ltd.
+// Copyright 2018-2020 ARM Ltd.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -18,22 +18,18 @@
 
 #include "blinky.h"
 
-#include "nanostack-event-loop/eventOS_event.h"
-#include "nanostack-event-loop/eventOS_event_timer.h"
-#include "ns_hal_init.h"
+#include "sal-stack-nanostack-eventloop/nanostack-event-loop/eventOS_event.h"
+#include "sal-stack-nanostack-eventloop/nanostack-event-loop/eventOS_event_timer.h"
+#include "ns-hal-pal/ns_hal_init.h"
+#include "mbed-trace/mbed_trace.h"
 
 #include "mcc_common_button_and_led.h"
-#include "mbed-trace/mbed_trace.h"
 #include "simplem2mclient.h"
 #include "m2mresource.h"
 
 #include <assert.h>
 #include <string.h>
-#include "stdio.h"
-#include <fstream>
-#include <iostream>
-#include <string>
-using namespace std;
+
 #define TRACE_GROUP "blky"
 
 #define BLINKY_TASKLET_LOOP_INIT_EVENT 0
@@ -43,9 +39,12 @@ using namespace std;
 #define BLINKY_TASKLET_AUTOMATIC_INCREMENT_TIMER 4
 
 #define BUTTON_POLL_INTERVAL_MS 100
-#define AUTOMATIC_INCREMENT_INTERVAL_MS 5000
 
-
+#ifdef MBED_CLOUD_CLIENT_TRANSPORT_MODE_UDP_QUEUE
+#define AUTOMATIC_INCREMENT_INTERVAL_MS 300000 // Update resource periodically every 300 seconds
+#else
+#define AUTOMATIC_INCREMENT_INTERVAL_MS 60000   // Update resource periodically every 60 seconds
+#endif
 
 int8_t Blinky::_tasklet = -1;
 
@@ -231,7 +230,7 @@ bool Blinky::request_timed_event(uint8_t event_type, arm_library_event_priority_
 {
     assert(_tasklet >= 0);
 
-    arm_event_t event = { 0 };
+    arm_event_t event;
 
     event.event_type = event_type;
     event.receiver = _tasklet;
@@ -256,22 +255,19 @@ void Blinky::handle_buttons()
     // this might be stopped now, but the loop should then be restarted after re-registration
     request_next_loop_event();
 
-    if (_client->is_register_called()) {
+    if (_client->is_client_registered()) {
         if (mcc_platform_button_clicked()) {
+#ifdef MBED_CLOUD_CLIENT_TRANSPORT_MODE_UDP_QUEUE
+        if(_client->is_client_paused()) {
+            printf("Calling Pelion Client resumed()\r\n");
+            _client->client_resumed();
+        }
+#endif
             _button_count = _button_resource->get_value_int() + 1;
             _button_resource->set_value(_button_count);
-            printf("Button resource manually updated. Value %d\n", _button_count);
+            printf("Button resource manually updated. Value %d\r\n", _button_count);
         }
     }
-}
-
-void write_value(int data)
-{
-	printf("write_value function with value %d\n",data);
-	ofstream outfile;
-    outfile.open("../../../data/sensor_value.out");
-	outfile << to_string(data) << endl;
-	outfile.close();
 }
 
 void Blinky::handle_automatic_increment()
@@ -282,36 +278,15 @@ void Blinky::handle_automatic_increment()
     // this might be stopped now, but the loop should then be restarted after re-registration
     request_automatic_increment_event();
 
-	char data[10];
-    int randomvib = rand() % 19 + (-9);
-	ifstream infile;
-	infile.open("../../../data/vib.conf");
-	infile >> data;
-	cout << data << endl;
-	int vib_mode = 0;
-	if(strcmp("ON",data) == 0)
-		vib_mode = 1;
-	if(strcmp("OFF",data) == 0)
-		vib_mode = 0;
-	if(vib_mode == 0)
-		randomvib = abs( rand() % 10 );
-	else
-		randomvib = abs( rand() % 10 ) + 20;
-	/*
-    if (_button_count < 10){
-        randomvib = abs(randomvib);
-    }
-
-    if (_button_count > 30){
-        randomvib = randomvib - 4;
-    }
-	*/
-
-    if (_client->is_register_called()) {
-        //_button_count = _button_resource->get_value_int() + randomvib;
-		_button_count = randomvib;
+    if (_client->is_client_registered()) {
+#ifdef MBED_CLOUD_CLIENT_TRANSPORT_MODE_UDP_QUEUE
+        if(_client->is_client_paused()) {
+            printf("Calling Pelion Client resumed()\r\n");
+            _client->client_resumed();
+        }
+#endif
+        _button_count = _button_resource->get_value_int() + 1;
         _button_resource->set_value(_button_count);
-		write_value(_button_count);
-        printf("Button resource automatically updated. Value %d\n", _button_count);
+        printf("Button resource automatically updated. Value %d\r\n", _button_count);
     }
 }
