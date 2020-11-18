@@ -1,4 +1,5 @@
-# ---------------------------------------------------------------------------
+#!/usr/bin/env python
+#
 # Pelion Device Management SDK
 # (C) COPYRIGHT 2017 Arm Limited
 #
@@ -14,15 +15,68 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # --------------------------------------------------------------------------
-"""generate a developer certificate and output a mbed_cloud_dev_credentials.c file."""
+"""Pelion virtual demo bootstrap."""
 
+import logging
 import os
 import subprocess
-import logging
 
+import tornado.escape
+import tornado.ioloop
+import tornado.options
+import tornado.web
+import tornado.websocket
 from mbed_cloud import AccountManagementAPI, CertificatesAPI
+from tornado.options import define, options
+
+define("port", default=8888, help="run on the given port", type=int)
 
 config = {}
+
+
+class Application(tornado.web.Application):
+    def __init__(self):
+        handlers = [(r"/", MainHandler), (r"/comsock", ComSocketHandler)]
+        settings = dict(
+            cookie_secret="__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__",
+            template_path=os.path.join(os.path.dirname(__file__), "templates"),
+            static_path=os.path.join(os.path.dirname(__file__), "static"),
+            xsrf_cookies=True,
+        )
+        super().__init__(handlers, **settings)
+
+
+class MainHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.render("index.html")
+
+
+class ComSocketHandler(tornado.websocket.WebSocketHandler):
+    waiters = set()
+
+    def get_compression_options(self):
+        # Non-None enables compression with default options.
+        return {}
+
+    def open(self):
+        logging.info("open(self)")
+        ComSocketHandler.waiters.add(self)
+
+    def on_close(self):
+        logging.info("on_close(self)")
+        ComSocketHandler.waiters.remove(self)
+
+    @classmethod
+    def send_update(cls, chat):
+        logging.info("sending message to %d waiters", len(cls.waiters))
+        for waiter in cls.waiters:
+            try:
+                waiter.write_message(chat)
+            except:
+                logging.error("Error sending message", exc_info=True)
+
+    def on_message(self, message):
+        logging.info("got message %r", message)
 
 
 def gencert():
@@ -62,33 +116,41 @@ def gencert():
 
 
 def build():
+    # spawn process to build pelion-client
     subprocess.Popen(['make', 'mbedCloudClientExample.elf'],
                      cwd='/build/mbed-cloud-client-example/__x86_x64_NativeLinux_mbedtls').wait()
 
 
 def _main():
+    tornado.options.parse_command_line()
+
     try:
         config["api_key"] = os.environ['CLOUD_SDK_API_KEY']
     except KeyError as e:
         logging.error(
-            'Missing CLOUD_SDK_API_KEY enviromental key !'
+            'Missing CLOUD_SDK_API_KEY environmental key !'
         )
         exit(1)
 
     try:
         # first-time invocation ?
-        open("/build/firstrun", 'x')
+        open("firstrun", 'x')
         # ..since we reach here, yes
         # let's generate dev certificate
         gencert()
-        # and build the appplication
+        # and build the application
         build()
     except FileExistsError:
         pass
 
-    # ready to lunch
+    # lunch pelion client in a separate process
     subprocess.Popen(['./mbedCloudClientExample.elf'],
-                     cwd='/build/mbed-cloud-client-example/__x86_x64_NativeLinux_mbedtls/Release/').wait()
+                     cwd='/build/mbed-cloud-client-example/__x86_x64_NativeLinux_mbedtls/Release/')
+
+    # lunch web app
+    app = Application()
+    app.listen(options.port)
+    tornado.ioloop.IOLoop.current().start()
 
 
 if __name__ == "__main__":

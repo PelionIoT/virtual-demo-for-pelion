@@ -13,13 +13,14 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lekton">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css">
-    <link rel="stylesheet" href="assets/css/led.compiled.css">
-    <link rel="stylesheet" href="assets/css/styles.css">
+
+    <link rel="stylesheet" href="{{ static_url("css/led.compiled.css") }}" type="text/css">
+    <link rel="stylesheet" href="{{ static_url("css/styles.css") }}" type="text/css">
+
     <script src="https://kit.fontawesome.com/4418250580.js" crossorigin="anonymous"></script>
 </head>
-
 <body id="body" onload="onLoad()"
-    style="background-image: url(&quot;assets/img/Device3.svg&quot;);width: 630px;height: 393px;max-height: 393px;min-height: 393px;background-color: rgb(17,16,16);background-repeat: no-repeat;">
+    style="background-image: url(&quot;static/img/Device3.svg&quot;);width: 630px;height: 393px;max-height: 393px;min-height: 393px;background-color: rgb(17,16,16);background-repeat: no-repeat;">
     <div class="container" style="width: 502px;">
         <div class="row">
             <div class="col" style="padding: 0px;">
@@ -142,8 +143,8 @@
         integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx"
         crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
-    <script src="assets/js/script.js "></script>
 
+    <script src="{{ static_url("js/script.js") }}" type="text/javascript"></script>
 </body>
 
 </html>
