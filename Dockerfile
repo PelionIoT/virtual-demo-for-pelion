@@ -16,11 +16,11 @@ RUN apt-get update && apt-get -y install \
  && rm -rf /var/lib/apt/lists/*
 
 # install mbed-cli
-RUN pip3 install requests click mbed-cli mbed-cloud-sdk
+RUN pip3 install requests click mbed-cli mbed-cloud-sdk tornado
 
 # Add pelion-client and webapp
 ADD mbed-cloud-client-example /build/mbed-cloud-client-example
-ADD webapp /build/webapp
+ADD sim-webapp /build/sim-webapp
 
 #
 # phase-1: initialize pelion-client
@@ -38,15 +38,8 @@ WORKDIR /build/mbed-cloud-client-example/__x86_x64_NativeLinux_mbedtls
 RUN cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=./../pal-platform/Toolchain/GCC/GCC.cmake -DEXTERNAL_DEFINE_FILE=./../define.txt \
     && make mbedCloudClientExample.elf
 
-#
-# phase-2: initialize web app lib deps.
-#
-#WORKDIR /build/webapp
-#RUN npm install
+EXPOSE 8888
 
-EXPOSE 8002
+WORKDIR /build/sim-webapp
 
-WORKDIR /build
-COPY docker-entrypoint.py .
-
-ENTRYPOINT ["python3", "docker-entrypoint.py"]
+CMD ["python3", "sim-webapp.py"]
