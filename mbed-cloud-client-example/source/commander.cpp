@@ -1,7 +1,7 @@
 #include "Commander.h"
 
+#include <cstring>
 #include <fcntl.h>
-#include <mqueue.h>
 #include <thread>
 
 #define MQUEUE_CMD "/mqueue-cmd"
@@ -11,10 +11,9 @@
 #define MAX_MSG_SIZE 256
 #define MSG_BUFFER_SIZE MAX_MSG_SIZE + 1
 
-void Commander::init(SimpleM2MClient &client) { _client = &client; }
+Commander::Commander(SimpleM2MClient *client) { this->_client = client; }
 
 void Commander::listen() {
-  mqd_t qd_cmd, qd_resp; // queue descriptors
   struct mq_attr attr;
 
   attr.mq_flags = 0;
@@ -34,10 +33,10 @@ void Commander::listen() {
     exit(1);
   }
 
-  char in_buffer[MSG_BUFFER_SIZE];
-  char out_buffer[MSG_BUFFER_SIZE];
+  std::thread t([&]() {
+    char in_buffer[MSG_BUFFER_SIZE];
+    char out_buffer[MSG_BUFFER_SIZE];
 
-  std::thread t([]() {
     while (true) {
       // get the oldest message with highest priority
       ssize_t size;

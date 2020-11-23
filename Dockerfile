@@ -16,7 +16,7 @@ RUN apt-get update && apt-get -y install \
  && rm -rf /var/lib/apt/lists/*
 
 # install mbed-cli
-RUN pip3 install requests click mbed-cli mbed-cloud-sdk tornado
+RUN pip3 install requests click mbed-cli mbed-cloud-sdk tornado posix_ipc
 
 # Add pelion-client and webapp
 ADD mbed-cloud-client-example /build/mbed-cloud-client-example

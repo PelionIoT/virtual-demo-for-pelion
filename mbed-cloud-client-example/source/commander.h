@@ -1,20 +1,20 @@
 #ifndef __COMMANDER_H__
 #define __COMMANDER_H__
 
+#include <mqueue.h>
+
 class SimpleM2MClient;
 
 class Commander {
 
 private:
   SimpleM2MClient *_client;
-
-  void listen();
+  mqd_t qd_cmd, qd_resp; // queue descriptors
 
 public:
-  Commander();
+  Commander(SimpleM2MClient *client);
 
-  ~Commander();
-
-  void init(SimpleM2MClient &client);
+  void listen();
 };
+
 #endif /* __COMMANDER_H__ */

@@ -312,7 +312,8 @@ void main_application(void)
 
     mbedClient.register_and_connect();
 
-    commander.init(mbedClient);
+    commander = new Commander(client);
+    commander->listen();
 
 #ifndef MCC_MEMORY
     blinky.init(mbedClient, button_res);
