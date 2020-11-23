@@ -28,7 +28,8 @@ ADD sim-webapp /build/sim-webapp
 WORKDIR /build/mbed-cloud-client-example
 
 # deploy mbed lib deps and remove unused to save space
-RUN mbed deploy \
+RUN mbed config root . \
+ && mbed deploy \
  && rm -rf mbed-os/ \
  && rm -rf drivers/
 
