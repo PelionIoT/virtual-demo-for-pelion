@@ -38,6 +38,7 @@
 #include "application_init.h"
 #include "mcc_common_button_and_led.h"
 #include "blinky.h"
+#include "commander.h"
 #ifndef MBED_CONF_MBED_CLOUD_CLIENT_DISABLE_CERTIFICATE_ENROLLMENT
 #include "certificate_enrollment_user_cb.h"
 #endif
@@ -77,6 +78,9 @@ void unregister(void);
 
 // Pointer to mbedClient, used for calling close function.
 static SimpleM2MClient *client;
+
+// Commander for Web IPC
+static Commander *commander;
 
 void counter_updated(const char*)
 {
@@ -307,6 +311,8 @@ void main_application(void)
 #endif
 
     mbedClient.register_and_connect();
+
+    commander.init(mbedClient);
 
 #ifndef MCC_MEMORY
     blinky.init(mbedClient, button_res);
