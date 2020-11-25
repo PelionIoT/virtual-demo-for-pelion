@@ -1,7 +1,12 @@
 #include "commander.h"
+#include "json.h"
+#include "simplem2mclient.h"
 
 #include <cstring>
 #include <fcntl.h>
+#include <iostream>
+#include <stdio.h>
+#include <string>
 #include <thread>
 
 #define MQUEUE_CMD "/mqueue-cmd"
@@ -11,9 +16,10 @@
 #define MAX_MSG_SIZE 256
 #define MSG_BUFFER_SIZE MAX_MSG_SIZE + 1
 
-Commander::Commander(SimpleM2MClient *client) { this->_client = client; }
+using json = nlohmann::json;
+using namespace std;
 
-void Commander::listen() {
+Commander::Commander(SimpleM2MClient *client) : _client(client) {
   struct mq_attr attr;
 
   attr.mq_flags = 0;
@@ -33,9 +39,32 @@ void Commander::listen() {
     exit(1);
   }
 
+  cout << "Commander initialized and waiting for cmds..." << endl;
+}
+
+void Commander::sendMsg(const char *cmd, const char *params, const char *data) {
+  char out_buffer[MSG_BUFFER_SIZE];
+
+  json resp;
+
+  resp["cmd"] = cmd;
+  resp["data"] = data;
+  if (params)
+    resp["params"] = params;
+
+  strcpy(out_buffer, resp.dump().c_str());
+  cout << "--> (qd_resp) : " << out_buffer << endl;
+
+  if (mq_send(qd_resp, out_buffer, strlen(out_buffer), 0) == -1) {
+    perror("Server: Not able to send response!");
+  }
+
+  cout << "--> (qd_resp) sent." << endl;
+}
+
+void Commander::listen() {
   std::thread t([&]() {
     char in_buffer[MSG_BUFFER_SIZE];
-    char out_buffer[MSG_BUFFER_SIZE];
 
     while (true) {
       // get the oldest message with highest priority
@@ -46,16 +75,23 @@ void Commander::listen() {
         exit(1);
       }
 
-      printf("<-- '%s' \n", in_buffer);
-      // send reply message to client
-      strcpy(out_buffer, in_buffer);
+      // parse json
+      auto json_msg = json::parse(in_buffer);
+      cout << "<-- (qd_cmd) : " << json_msg.dump() << endl;
 
-      if (mq_send(qd_resp, out_buffer, strlen(out_buffer) + 1, 0) == -1) {
-        perror("Server: Not able to send response");
-        continue;
+      string cmd = json_msg["cmd"];
+
+      if (cmd == "getID") {
+        const ConnectorClientEndpointInfo *endpoint =
+            _client->get_cloud_client().endpoint_info();
+
+        if (endpoint) {
+          this->sendMsg("getID", NULL,
+                        endpoint->internal_endpoint_name.c_str());
+        }
+      } else {
+        this->sendMsg("err", NULL, "unknown command");
       }
-
-      printf("response sent to client.\n");
     }
   });
 

@@ -20,6 +20,9 @@
 import logging
 import os
 import subprocess
+import threading
+import posix_ipc
+import asyncio
 
 import tornado.escape
 import tornado.ioloop
@@ -33,6 +36,13 @@ define("port", default=8888, help="run on the given port", type=int)
 
 config = {}
 
+MQUEUE_CMD = "/mqueue-cmd"
+MQUEUE_RESP = "/mqueue-resp"
+qd_cmd = posix_ipc.MessageQueue(
+    name=MQUEUE_CMD, flags=posix_ipc.O_CREAT, max_messages=10, max_message_size=256)
+qd_resp = posix_ipc.MessageQueue(
+    name=MQUEUE_RESP, flags=posix_ipc.O_CREAT, max_messages=10, max_message_size=256)
+
 
 class Application(tornado.web.Application):
     def __init__(self):
@@ -43,7 +53,26 @@ class Application(tornado.web.Application):
             static_path=os.path.join(os.path.dirname(__file__), "static"),
             xsrf_cookies=True,
         )
+
+        MqueuHandler()
         super().__init__(handlers, **settings)
+
+
+class MqueuHandler():
+    def __init__(self):
+        mqueue_listen_thread = threading.Thread(
+            target=self.mqueue_resp_listen, daemon=True)
+        mqueue_listen_thread.start()
+
+    def mqueue_resp_listen(name):
+        logging.info("listening on (qd_resp)...")
+        asyncio.set_event_loop(asyncio.new_event_loop())
+
+        while True:
+            s, _ = qd_resp.receive()
+            s = s.decode()
+            logging.info("got (qd_resp) msg: '%s'", s)
+            ComSocketHandler.send_update(s)
 
 
 class MainHandler(tornado.web.RequestHandler):
@@ -67,16 +96,22 @@ class ComSocketHandler(tornado.websocket.WebSocketHandler):
         ComSocketHandler.waiters.remove(self)
 
     @classmethod
-    def send_update(cls, chat):
-        logging.info("sending message to %d waiters", len(cls.waiters))
+    def send_update(cls, message):
         for waiter in cls.waiters:
             try:
-                waiter.write_message(chat)
+                waiter.write_message(message)
             except:
                 logging.error("Error sending message", exc_info=True)
 
+        logging.info("sent (ws) msg to %d waiters", len(cls.waiters))
+
     def on_message(self, message):
-        logging.info("got message %r", message)
+        logging.info("got (ws) msg: %r", message)
+
+        # add null termination expected from C backend
+        cmd = message.encode('ascii') + b'\x00'
+        qd_cmd.send(cmd)
+        logging.info("sent (qd_cmd) msg: '%s'", cmd)
 
 
 def gencert():

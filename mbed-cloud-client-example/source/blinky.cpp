@@ -25,9 +25,11 @@
 
 #include "mcc_common_button_and_led.h"
 #include "simplem2mclient.h"
+#include "commander.h"
 #include "m2mresource.h"
 
 #include <assert.h>
+#include <string>
 #include <string.h>
 
 #define TRACE_GROUP "blky"
@@ -43,7 +45,7 @@
 #ifdef MBED_CLOUD_CLIENT_TRANSPORT_MODE_UDP_QUEUE
 #define AUTOMATIC_INCREMENT_INTERVAL_MS 300000 // Update resource periodically every 300 seconds
 #else
-#define AUTOMATIC_INCREMENT_INTERVAL_MS 60000   // Update resource periodically every 60 seconds
+#define AUTOMATIC_INCREMENT_INTERVAL_MS 5000   // Update resource periodically every 5 seconds
 #endif
 
 int8_t Blinky::_tasklet = -1;
@@ -90,7 +92,7 @@ void Blinky::create_tasklet()
 }
 
 // use references to encourage caller to pass this existing object
-void Blinky::init(SimpleM2MClient &client, M2MResource *resource)
+void Blinky::init(SimpleM2MClient &client, Commander *commander, M2MResource *resource)
 {
     // Do not start if resource has not been allocated.
     if (!resource) {
@@ -98,6 +100,7 @@ void Blinky::init(SimpleM2MClient &client, M2MResource *resource)
     }
 
     _client = &client;
+    _commander = commander;
     _button_resource = resource;
 
     // create the tasklet, if not done already
@@ -287,6 +290,9 @@ void Blinky::handle_automatic_increment()
 #endif
         _button_count = _button_resource->get_value_int() + 1;
         _button_resource->set_value(_button_count);
+
+        _commander->sendMsg("observe", "/3200/0/5501", std::to_string(_button_count).c_str());
+
         printf("Button resource automatically updated. Value %d\r\n", _button_count);
     }
 }

@@ -23,6 +23,7 @@
 
 class SimpleM2MClient;
 class M2MResource;
+class Commander;
 
 #include <stdint.h>
 
@@ -38,7 +39,7 @@ public:
 
     ~Blinky();
 
-    void init(SimpleM2MClient &client, M2MResource *resource);
+    void init(SimpleM2MClient &client, Commander *commander, M2MResource *resource);
 
     bool start(const char* pattern, size_t length, bool pattern_restart);
 
@@ -69,6 +70,8 @@ private:
     const char *_curr_pattern;
 
     SimpleM2MClient *_client;
+
+    Commander *_commander;
 
     M2MResource     *_button_resource;
 

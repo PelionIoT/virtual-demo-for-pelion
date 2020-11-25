@@ -316,7 +316,7 @@ void main_application(void)
     commander->listen();
 
 #ifndef MCC_MEMORY
-    blinky.init(mbedClient, button_res);
+    blinky.init(mbedClient, commander, button_res);
     blinky.request_next_loop_event();
     blinky.request_automatic_increment_event();
 #endif

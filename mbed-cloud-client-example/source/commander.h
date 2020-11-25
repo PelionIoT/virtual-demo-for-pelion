@@ -14,6 +14,7 @@ private:
 public:
   Commander(SimpleM2MClient *client);
 
+  void sendMsg(const char *cmd, const char *params, const char *data);
   void listen();
 };
 
