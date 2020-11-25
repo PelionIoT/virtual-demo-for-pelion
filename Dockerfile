@@ -1,6 +1,9 @@
-FROM ubuntu:20.04
+FROM ubuntu:18.04
 
 ENV CLOUD_SDK_API_KEY YOUR_PELION_API_KEY
+
+ENV LC_ALL C.UTF-8
+ENV LANG C.UTF-8
 
 WORKDIR /build
 
@@ -16,7 +19,7 @@ RUN apt-get update && apt-get -y install \
  && rm -rf /var/lib/apt/lists/*
 
 # install mbed-cli
-RUN pip3 install requests click mbed-cli mbed-cloud-sdk tornado posix_ipc
+RUN pip3 install requests click mbed-cli mbed-cloud-sdk manifest-tool==v1.5.2 tornado posix_ipc
 
 # Add pelion-client and webapp
 ADD mbed-cloud-client-example /build/mbed-cloud-client-example
