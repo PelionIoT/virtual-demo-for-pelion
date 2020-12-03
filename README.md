@@ -24,7 +24,7 @@ A docker image has been prepared and uploaded to the docker hub site, the comman
 
 Kill the demo with CTRL-C. The docker container running this instance of the demo will be suspended. You can choose to come back to this same container and resume it at a later date (the deviceID will be preserved), or you can issue a fresh `docker run` command to create a new device instance and a new device in your device directory.
 ```
-docker resume pelion-demo
+docker restart pelion-demo
 docker attach pelion-demo
 ```
 
@@ -38,15 +38,18 @@ The virtual device docker image and the contents of this github repo can be used
     ```
    docker run -it --name pelion-demo-dev -p 8888:8888 -v $(pwd)/sim-webapp:/build/sim-webapp -v $(pwd)/mbed-cloud-client-example:/build/mbed-cloud-client-example -v $(pwd)/tools:/build/tools -e CLOUD_SDK_API_KEY=<YOUR_API_KEY> pelion/virtual-demo bash
     ```
-    
+This will create a container with the name tag "pelion-demo-dev" that is running the pelion/virtual-demo image with volume links to the sim-webapp, mbed-cloud-client-example, and tools folders on your local machine. You can use the pelion-demo-dev container name if you exit the running container and want to return to it with docker restart and resume commands.
+
 3. You'll be at the bash shell inside the container, you now need to create the build environment to allow the demo to be rebuilt with your changes
 
 ```
 cd ../mbed-cloud-client-example
 mbed config root .
 mbed deploy
-python pal-platform
+python3 pal-platform/pal-platform.py deploy --target=x86_x64_NativeLinux_mbedtls generate
 cmake
+cd __x86_x64_NativeLinux_mbedtls
+cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=./../pal-platform/Toolchain/GCC/GCC.cmake -DEXTERNAL_DEFINE_FILE=./../define.txt
 cd ../sim-webapp
 ```
 
