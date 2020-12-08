@@ -273,6 +273,9 @@ void Blinky::handle_buttons()
     }
 }
 
+// need to put this somewhere better so that shake button can toggle
+int vib_mode=0;
+
 void Blinky::handle_automatic_increment()
 {
     assert(_client);
@@ -281,6 +284,17 @@ void Blinky::handle_automatic_increment()
     // this might be stopped now, but the loop should then be restarted after re-registration
     request_automatic_increment_event();
 
+    int randomvib = rand() % 19 + (-9);
+//	int vib_mode = 0;
+/*	if(strcmp("ON",data) == 0)
+		vib_mode = 1;
+	if(strcmp("OFF",data) == 0)
+		vib_mode = 0;*/
+	if(vib_mode == 0) 
+		randomvib = abs( rand() % 10 );
+	else
+		randomvib = abs( rand() % 10 ) + 20;
+
     if (_client->is_client_registered()) {
 #ifdef MBED_CLOUD_CLIENT_TRANSPORT_MODE_UDP_QUEUE
         if(_client->is_client_paused()) {
@@ -288,10 +302,11 @@ void Blinky::handle_automatic_increment()
             _client->client_resumed();
         }
 #endif
-        _button_count = _button_resource->get_value_int() + 1;
+//        _button_count = _button_resource->get_value_int() + 1;
+ 		_button_count = randomvib;
         _button_resource->set_value(_button_count);
-
-        _commander->sendMsg("observe", "/3200/0/5501", std::to_string(_button_count).c_str());
+        _commander->sendMsg("observe", "/3313/0/5700", std::to_string(_button_count).c_str());
+//        _commander->sendMsg("observe", "/3200/0/5501", std::to_string(_button_count).c_str());
 
         printf("Button resource automatically updated. Value %d\r\n", _button_count);
     }

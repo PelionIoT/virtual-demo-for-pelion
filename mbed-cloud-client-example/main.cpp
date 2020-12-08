@@ -73,6 +73,8 @@ static M2MResource* pattern_res;
 static M2MResource* blink_res;
 static M2MResource* unregister_res;
 static M2MResource* factory_reset_res;
+static M2MResource* sensed_res;
+
 
 void unregister(void);
 
@@ -82,12 +84,28 @@ static SimpleM2MClient *client;
 // Commander for Web IPC
 static Commander *commander;
 
+// Define the type of sensor we're demoing
+// 0-vibration, 1-temperature, 2-button count
+static int deviceType=2;
+
 void counter_updated(const char*)
 {
-    // Converts uint64_t to a string to remove the dependency for int64 printf implementation.
-    char buffer[20+1];
-    (void) m2m::itoa_c(button_res->get_value_int(), buffer);
-    printf("Counter resource set to %s\r\n", buffer);
+/*    switch (deviceType) {
+    case 0:
+        printf("Sensor resource set to %d\n", sensed_res->get_value_int());
+        break;
+    case 1:
+        printf("Sensor resource set to %d\n", sensed_res->get_value_int());
+        break;
+    case 2:*/
+        // Converts uint64_t to a string to remove the dependency for int64 printf implementation.
+        char buffer[20+1];
+//        (void) m2m::itoa_c(button_res->get_value_int(), buffer);
+        (void) m2m::itoa_c(sensed_res->get_value_int(), buffer);
+        printf("Counter resource set to %s\r\n", buffer)
+//        break;
+//    }
+;
 }
 
 void pattern_updated(const char *)
@@ -266,11 +284,30 @@ void main_application(void)
 #endif
 
 #ifndef MCC_MEMORY
-    // Create resource for button count. Path of this resource will be: 3200/0/5501.
-    button_res = mbedClient.add_cloud_resource(3200, 0, 5501, "button_resource", M2MResourceInstance::INTEGER,
-                              M2MBase::GET_PUT_ALLOWED, 0, true, (void*)counter_updated, (void*)notification_status_callback);
-    button_res->set_value(0);
-
+switch(deviceType){
+    case 0:
+            sensed_res = mbedClient.add_cloud_resource(3313, 0, 5700, "vibration_resource", M2MResourceInstance::INTEGER,
+                            M2MBase::GET_PUT_ALLOWED, 0, true, (void*)counter_updated, (void*)notification_status_callback);
+            sensed_res->set_value(0);
+        break;
+        case 1:
+            sensed_res = mbedClient.add_cloud_resource(3303, 0, 5700, "temperature_resource", M2MResourceInstance::INTEGER,
+                            M2MBase::GET_PUT_ALLOWED, 0, true, (void*)counter_updated, (void*)notification_status_callback);
+            sensed_res->set_value(0);
+        break;
+        case 2:
+            // Create resource for button count. Path of this resource will be: 3200/0/5501.
+            button_res = mbedClient.add_cloud_resource(3200, 0, 5501, "button_resource", M2MResourceInstance::INTEGER,
+                            M2MBase::GET_PUT_ALLOWED, 0, true, (void*)counter_updated, (void*)notification_status_callback);
+            button_res->set_value(0);
+        break;
+        default:
+            printf("Config file does not contain valid string!");
+            /*sensed_res = mbedClient.add_cloud_resource(42, 0, 42, "sensed_resource", M2MResourceInstance::INTEGER,
+                            M2MBase::GET_PUT_ALLOWED, 0, true, (void*)counter_updated, (void*)notification_status_callback);
+            sensed_res->set_value(0);*/
+    }
+ 
     // Create resource for led blinking pattern. Path of this resource will be: 3201/0/5853.
     pattern_res = mbedClient.add_cloud_resource(3201, 0, 5853, "pattern_resource", M2MResourceInstance::STRING,
                                M2MBase::GET_PUT_ALLOWED, "500:500:500:500", true, (void*)pattern_updated, (void*)notification_status_callback);
