@@ -73,7 +73,6 @@ static M2MResource* pattern_res;
 static M2MResource* blink_res;
 static M2MResource* unregister_res;
 static M2MResource* factory_reset_res;
-static M2MResource* sensed_res;
 
 
 void unregister(void);
@@ -86,22 +85,22 @@ static Commander *commander;
 
 // Define the type of sensor we're demoing
 // 0-vibration, 1-temperature, 2-button count
-static int deviceType=2;
+static int demoDeviceType=0;
 
 void counter_updated(const char*)
 {
-/*    switch (deviceType) {
+/*    switch (demoDeviceType) {
     case 0:
-        printf("Sensor resource set to %d\n", sensed_res->get_value_int());
+        printf("Sensor resource set to %d\n", button_res->get_value_int());
         break;
     case 1:
-        printf("Sensor resource set to %d\n", sensed_res->get_value_int());
+        printf("Sensor resource set to %d\n", button_res->get_value_int());
         break;
     case 2:*/
         // Converts uint64_t to a string to remove the dependency for int64 printf implementation.
         char buffer[20+1];
 //        (void) m2m::itoa_c(button_res->get_value_int(), buffer);
-        (void) m2m::itoa_c(sensed_res->get_value_int(), buffer);
+        (void) m2m::itoa_c(button_res->get_value_int(), buffer);
         printf("Counter resource set to %s\r\n", buffer)
 //        break;
 //    }
@@ -284,16 +283,16 @@ void main_application(void)
 #endif
 
 #ifndef MCC_MEMORY
-switch(deviceType){
+switch(demoDeviceType){
     case 0:
-            sensed_res = mbedClient.add_cloud_resource(3313, 0, 5700, "vibration_resource", M2MResourceInstance::INTEGER,
+            button_res = mbedClient.add_cloud_resource(3313, 0, 5700, "vibration_resource", M2MResourceInstance::INTEGER,
                             M2MBase::GET_PUT_ALLOWED, 0, true, (void*)counter_updated, (void*)notification_status_callback);
-            sensed_res->set_value(0);
-        break;
+            button_res->set_value(0);
+         break;
         case 1:
-            sensed_res = mbedClient.add_cloud_resource(3303, 0, 5700, "temperature_resource", M2MResourceInstance::INTEGER,
+            button_res = mbedClient.add_cloud_resource(3303, 0, 5700, "temperature_resource", M2MResourceInstance::INTEGER,
                             M2MBase::GET_PUT_ALLOWED, 0, true, (void*)counter_updated, (void*)notification_status_callback);
-            sensed_res->set_value(0);
+            button_res->set_value(0);
         break;
         case 2:
             // Create resource for button count. Path of this resource will be: 3200/0/5501.
