@@ -1,4 +1,5 @@
 #include "commander.h"
+#include "blinky.h"
 #include "json.h"
 #include "simplem2mclient.h"
 
@@ -19,7 +20,8 @@
 using json = nlohmann::json;
 using namespace std;
 
-Commander::Commander(SimpleM2MClient *client) : _client(client) {
+Commander::Commander(SimpleM2MClient &client, Blinky &blinky)
+    : _client(client), _blinky(blinky) {
   struct mq_attr attr;
 
   attr.mq_flags = 0;
@@ -79,18 +81,22 @@ void Commander::listen() {
       auto json_msg = json::parse(in_buffer);
       cout << "<-- (qd_cmd) : " << json_msg.dump() << endl;
 
+      // extract command
       string cmd = json_msg["cmd"];
 
       if (cmd == "getID") {
         const ConnectorClientEndpointInfo *endpoint =
-            _client->get_cloud_client().endpoint_info();
+            _client.get_cloud_client().endpoint_info();
 
         if (endpoint) {
-          this->sendMsg("getID", NULL,
-                        endpoint->internal_endpoint_name.c_str());
+          sendMsg("getID", NULL, endpoint->internal_endpoint_name.c_str());
         }
+
+      } else if (cmd == "shake") {
+        _blinky.shake(json_msg["enable"]);
+
       } else {
-        this->sendMsg("err", NULL, "unknown command");
+        sendMsg("err", NULL, "unknown command");
       }
     }
   });

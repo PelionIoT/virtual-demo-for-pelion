@@ -45,6 +45,8 @@ public:
 
     void stop();
 
+    void shake(bool enable);
+
 public:
     // This needs
     void event_handler(const arm_event_s &event);
@@ -82,6 +84,8 @@ private:
     bool _restart;
 
     static int8_t _tasklet;
+
+    bool _shake;
 
 };
 #endif /* __BLINKY_H__ */

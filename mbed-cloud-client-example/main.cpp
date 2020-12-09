@@ -348,7 +348,7 @@ switch(demoDeviceType){
 
     mbedClient.register_and_connect();
 
-    commander = new Commander(client);
+    commander = new Commander(mbedClient, blinky);
     commander->listen();
 
 #ifndef MCC_MEMORY

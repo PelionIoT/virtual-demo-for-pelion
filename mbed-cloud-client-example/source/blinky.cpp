@@ -273,8 +273,9 @@ void Blinky::handle_buttons()
     }
 }
 
-// need to put this somewhere better so that shake button can toggle
-int vib_mode=0;
+void Blinky::shake(bool enable) {
+    _shake = enable;
+}
 
 void Blinky::handle_automatic_increment()
 {
@@ -284,16 +285,7 @@ void Blinky::handle_automatic_increment()
     // this might be stopped now, but the loop should then be restarted after re-registration
     request_automatic_increment_event();
 
-    int randomvib = rand() % 19 + (-9);
-//	int vib_mode = 0;
-/*	if(strcmp("ON",data) == 0)
-		vib_mode = 1;
-	if(strcmp("OFF",data) == 0)
-		vib_mode = 0;*/
-	if(vib_mode == 0) 
-		randomvib = abs( rand() % 10 );
-	else
-		randomvib = abs( rand() % 10 ) + 20;
+    int randomvib = _shake? abs(rand() % 10)+20: abs(rand() % 10);
 
     if (_client->is_client_registered()) {
 #ifdef MBED_CLOUD_CLIENT_TRANSPORT_MODE_UDP_QUEUE
