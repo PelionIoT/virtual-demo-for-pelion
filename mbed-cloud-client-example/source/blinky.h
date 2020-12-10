@@ -39,7 +39,7 @@ public:
 
     ~Blinky();
 
-    void init(SimpleM2MClient &client, Commander *commander, M2MResource *resource);
+    void init(SimpleM2MClient &client, Commander *commander, M2MResource *resource, long sensor_update_interval);
 
     bool start(const char* pattern, size_t length, bool pattern_restart);
 
@@ -75,9 +75,9 @@ private:
 
     Commander *_commander;
 
-    M2MResource     *_button_resource;
+    M2MResource     *_sensed_res;
 
-    int              _button_count;
+    int              _sensed_count;
 
     BlinkyState _state;
 
@@ -86,6 +86,8 @@ private:
     static int8_t _tasklet;
 
     bool _shake;
+
+    long _sensor_update_interval_s;
 
 };
 #endif /* __BLINKY_H__ */

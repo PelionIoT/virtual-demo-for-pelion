@@ -35,6 +35,7 @@ from tornado.options import define, options
 define("port", default=8888, help="run on the given port", type=int)
 
 config = {}
+sensor_type = "vibration"  # default to vibration
 
 MQUEUE_CMD = "/mqueue-cmd"
 MQUEUE_RESP = "/mqueue-resp"
@@ -77,7 +78,7 @@ class MqueuHandler():
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
-        self.render("index.html")
+        self.render("index.html", sensor_type=os.getenv('SENSOR', 'vibration'))
 
 
 class ComSocketHandler(tornado.websocket.WebSocketHandler):
@@ -159,13 +160,24 @@ def build():
 def _main():
     tornado.options.parse_command_line()
 
+    # check if CLOUD_SDK_API_KEY env is configured
     try:
         config["api_key"] = os.environ['CLOUD_SDK_API_KEY']
+
     except KeyError as e:
         logging.error(
             'Missing CLOUD_SDK_API_KEY environmental key !'
         )
         exit(1)
+
+    # check if SENSOR env is configured
+    if "SENSOR" in os.environ:
+        sensor_type = os.environ['SENSOR']
+        if sensor_type != "vibration" and sensor_type != "temperature":
+            logging.error(
+                "unknown sensor type configured, please use either 'vibration' or 'temperature'\n"
+            )
+            exit(1)
 
     try:
         # first-time invocation ?

@@ -17,7 +17,9 @@
 // ----------------------------------------------------------------------------
 
 // Needed for PRIu64 on FreeRTOS
-#include <stdio.h>
+#include <cstdio>
+#include <cstdlib>
+#include <string>
 // Note: this macro is needed on armcc to get the the limit macros like UINT16_MAX
 #ifndef __STDC_LIMIT_MACROS
 #define __STDC_LIMIT_MACROS
@@ -68,7 +70,7 @@ int main(void)
 }
 
 // Pointers to the resources that will be created in main_application().
-static M2MResource* button_res;
+static M2MResource* sensed_res;
 static M2MResource* pattern_res;
 static M2MResource* blink_res;
 static M2MResource* unregister_res;
@@ -83,28 +85,11 @@ static SimpleM2MClient *client;
 // Commander for Web IPC
 static Commander *commander;
 
-// Define the type of sensor we're demoing
-// 0-vibration, 1-temperature, 2-button count
-static int demoDeviceType=0;
-
 void counter_updated(const char*)
 {
-/*    switch (demoDeviceType) {
-    case 0:
-        printf("Sensor resource set to %d\n", button_res->get_value_int());
-        break;
-    case 1:
-        printf("Sensor resource set to %d\n", button_res->get_value_int());
-        break;
-    case 2:*/
-        // Converts uint64_t to a string to remove the dependency for int64 printf implementation.
-        char buffer[20+1];
-//        (void) m2m::itoa_c(button_res->get_value_int(), buffer);
-        (void) m2m::itoa_c(button_res->get_value_int(), buffer);
-        printf("Counter resource set to %s\r\n", buffer)
-//        break;
-//    }
-;
+        char buffer[20 + 1];
+        (void) m2m::itoa_c(sensed_res->get_value_int(), buffer);
+        printf("Counter resource set to %s\r\n", buffer);
 }
 
 void pattern_updated(const char *)
@@ -201,6 +186,22 @@ void unregister(void)
     client->close();
 }
 
+// Retrieve the value from env, or the defaultval if not set
+std::string get_env(const char *key, const char *defaultval) {
+    const char *env_val = getenv(key);
+    if (env_val == nullptr) {
+        return std::string(defaultval);    
+    }
+    return std::string(env_val);
+}
+
+bool is_number(const std::string &str) {
+  for (int i = 0; i < str.length(); i++)
+    if (isdigit(str[i]) == false)
+      return false;
+  return true;
+}
+
 void main_application(void)
 {
 #if defined(__linux__) && (MBED_CONF_MBED_TRACE_ENABLE == 0)
@@ -283,30 +284,29 @@ void main_application(void)
 #endif
 
 #ifndef MCC_MEMORY
-switch(demoDeviceType){
-    case 0:
-            button_res = mbedClient.add_cloud_resource(3313, 0, 5700, "vibration_resource", M2MResourceInstance::INTEGER,
-                            M2MBase::GET_PUT_ALLOWED, 0, true, (void*)counter_updated, (void*)notification_status_callback);
-            button_res->set_value(0);
-         break;
-        case 1:
-            button_res = mbedClient.add_cloud_resource(3303, 0, 5700, "temperature_resource", M2MResourceInstance::INTEGER,
-                            M2MBase::GET_PUT_ALLOWED, 0, true, (void*)counter_updated, (void*)notification_status_callback);
-            button_res->set_value(0);
-        break;
-        case 2:
-            // Create resource for button count. Path of this resource will be: 3200/0/5501.
-            button_res = mbedClient.add_cloud_resource(3200, 0, 5501, "button_resource", M2MResourceInstance::INTEGER,
-                            M2MBase::GET_PUT_ALLOWED, 0, true, (void*)counter_updated, (void*)notification_status_callback);
-            button_res->set_value(0);
-        break;
-        default:
-            printf("Config file does not contain valid string!");
-            /*sensed_res = mbedClient.add_cloud_resource(42, 0, 42, "sensed_resource", M2MResourceInstance::INTEGER,
-                            M2MBase::GET_PUT_ALLOWED, 0, true, (void*)counter_updated, (void*)notification_status_callback);
-            sensed_res->set_value(0);*/
+
+    // sensor to configure
+    std::string sensor_type = get_env("SENSOR", /*default*/ "vibration");
+    if (sensor_type != "vibration" && sensor_type != "temperature") {
+        printf("unknown sensor type configured, please use either 'vibration' or 'temperature'\n");
+        exit(1);
     }
- 
+    // update interval
+    std::string sensor_update_interval_s = get_env("INTERVAL", /*default 5secs*/ "5");
+    if (!is_number(sensor_update_interval_s)) {
+        printf("invalid update interval configured!\n");
+        exit(1);
+    }
+
+    if (sensor_type == "vibration") {
+        sensed_res = mbedClient.add_cloud_resource(3313, 0, 5700, "vibration_resource", M2MResourceInstance::INTEGER,
+                        M2MBase::GET_PUT_ALLOWED, 0, true, (void*)counter_updated, (void*)notification_status_callback);
+        sensed_res->set_value(0);
+    } else if (sensor_type == "temperature") {
+        sensed_res = mbedClient.add_cloud_resource(3303, 0, 5700, "temperature_resource", M2MResourceInstance::INTEGER,
+                        M2MBase::GET_PUT_ALLOWED, 0, true, (void*)counter_updated, (void*)notification_status_callback);
+        sensed_res->set_value(0);
+    }
     // Create resource for led blinking pattern. Path of this resource will be: 3201/0/5853.
     pattern_res = mbedClient.add_cloud_resource(3201, 0, 5853, "pattern_resource", M2MResourceInstance::STRING,
                                M2MBase::GET_PUT_ALLOWED, "500:500:500:500", true, (void*)pattern_updated, (void*)notification_status_callback);
@@ -329,7 +329,7 @@ switch(demoDeviceType){
     }
 
 #ifdef MBED_CLOUD_CLIENT_TRANSPORT_MODE_UDP_QUEUE
-    button_res->set_auto_observable(true);
+    sensed_res->set_auto_observable(true);
     pattern_res->set_auto_observable(true);
     blink_res->set_auto_observable(true);
     unregister_res->set_auto_observable(true);
@@ -352,7 +352,7 @@ switch(demoDeviceType){
     commander->listen();
 
 #ifndef MCC_MEMORY
-    blinky.init(mbedClient, commander, button_res);
+    blinky.init(mbedClient, commander, sensed_res, std::stol(sensor_update_interval_s));
     blinky.request_next_loop_event();
     blinky.request_automatic_increment_event();
 #endif
