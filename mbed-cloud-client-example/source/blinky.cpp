@@ -176,7 +176,9 @@ bool Blinky::run_step()
         return false;
     }
 
-    mcc_platform_toggle_led();
+    mcc_platform_toggle_led();    
+    // instruct sim. to toggle blink led with the parsed 'delay'
+    _commander->sendMsg("blink", _sensed_res->uri_path(), std::to_string(delay).c_str());
 
     _state = STATE_STARTED;
 

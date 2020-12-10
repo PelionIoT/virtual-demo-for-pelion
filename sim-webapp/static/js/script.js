@@ -1,5 +1,9 @@
 var wss;
 
+var ON  = {'font-size': '30px', 'color': 'rgb(0,255,0)'};
+var OFF = {'font-size': '30px', 'color': 'rgb(0,0,0)'};
+var led = false;
+
 function onLoad() {
     var url = "ws://" + location.host + "/comsock";
     wss = new WebSocket(url);
@@ -8,15 +12,18 @@ function onLoad() {
         var response = JSON.parse(message.data);
         switch (response.cmd) {
             case "getID":
-                data = response.data.substr(response.data.length - 7);
-                $("#deviceID").text(data);
+                device_id = response.data.substr(response.data.length - 7);
+                $("#deviceID").text(device_id);
                 break;
             case "observe":
-                data = response.data;
-                $("#number").text(data);
+                resource_val = response.data;
+                $("#number").text(resource_val);
                 break;
+            case "blink":
+                $("#led").css( (led? OFF: ON) );
+                led = !led;
             default:
-                console.log(response.data);
+                console.log("received unknown cmd: " + response.data);
         }
     }
 
