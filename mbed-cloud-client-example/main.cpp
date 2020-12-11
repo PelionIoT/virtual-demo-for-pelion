@@ -309,7 +309,7 @@ void main_application(void)
     }
     // Create resource for led blinking pattern. Path of this resource will be: 3201/0/5853.
     pattern_res = mbedClient.add_cloud_resource(3201, 0, 5853, "pattern_resource", M2MResourceInstance::STRING,
-                               M2MBase::GET_PUT_ALLOWED, "500:500:500:500", true, (void*)pattern_updated, (void*)notification_status_callback);
+                               M2MBase::GET_PUT_ALLOWED, "500:500:500:500:500:500", true, (void*)pattern_updated, (void*)notification_status_callback);
 
     // Create resource for starting the led blinking. Path of this resource will be: 3201/0/5850.
     blink_res = mbedClient.add_cloud_resource(3201, 0, 5850, "blink_resource", M2MResourceInstance::STRING,
