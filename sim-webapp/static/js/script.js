@@ -24,7 +24,7 @@ function onLoad() {
                 led = !led;
                 break;
             default:
-                console.log("received unknown cmd: " + response.data);
+                console.log("received unknown paylod: " + message.data);
         }
     }
 
