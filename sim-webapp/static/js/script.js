@@ -22,6 +22,7 @@ function onLoad() {
             case "blink":
                 $("#led").css( (led? OFF: ON) );
                 led = !led;
+                break;
             default:
                 console.log("received unknown cmd: " + response.data);
         }
