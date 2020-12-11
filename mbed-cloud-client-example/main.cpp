@@ -313,7 +313,7 @@ void main_application(void)
 
     // Create resource for starting the led blinking. Path of this resource will be: 3201/0/5850.
     blink_res = mbedClient.add_cloud_resource(3201, 0, 5850, "blink_resource", M2MResourceInstance::STRING,
-                             M2MBase::POST_ALLOWED, "", false, (void*)blink_callback, (void*)notification_status_callback);
+                             M2MBase::GET_POST_ALLOWED, "", false, (void*)blink_callback, (void*)notification_status_callback);
     // Use delayed response
     blink_res->set_delayed_response(true);
 
