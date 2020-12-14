@@ -44,13 +44,13 @@ function toggleShake() {
     $("#shakeButtonId").toggleClass("animate__wobble");
     setTimeout(() => $("#shakeButtonId").toggleClass("animate__wobble"), 5000);
 
-    //instruct server and revert after 5s
+    //instruct server and revert after 20s
     var cmd = { cmd: "shake", enable: true };
     wss.send(JSON.stringify(cmd));
     setTimeout(() => {
         var cmd = { cmd: "shake", enable: false };
         wss.send(JSON.stringify(cmd));
-    }, 10000)
+    }, 20000)
 
 }
 
