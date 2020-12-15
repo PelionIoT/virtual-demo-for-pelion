@@ -1,4 +1,0 @@
-sleep 5
-docker restart PDM_demo_container
-docker attach PDM_demo_container
-

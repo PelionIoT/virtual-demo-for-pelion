@@ -1,43 +1,49 @@
-FROM ubuntu
+FROM ubuntu:18.04
 
-#noninteractive env variable required to allow cmake install without region prompt
+ENV CLOUD_SDK_API_KEY YOUR_PELION_API_KEY
+
+ENV LC_ALL C.UTF-8
+ENV LANG C.UTF-8
+
+WORKDIR /build
+
+# noninteractive env variable required to allow cmake install without region prompt
 ENV DEBIAN_FRONTEND=noninteractive
 
-#install packages
-RUN apt-get update
-RUN apt-get install -y curl wget
-RUN apt-get install -y python3 python3-pip git mercurial
-RUN apt-get install -y make
-RUN apt-get install -y cmake
-RUN pip3 install requests
-RUN pip3 install click
-RUN python3 -m pip install mbed-cli
+# install packages
+RUN apt-get update && apt-get -y install \
+    git mercurial \
+    build-essential \
+    automake make cmake \
+    python3 python3-pip \
+ && rm -rf /var/lib/apt/lists/*
 
-#download and extract gcc. set location with mbed -G, remove download tar bz2 to save space
-WORKDIR /mbed
-RUN wget -nv --progress=bar https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-rm/9-2020q2/gcc-arm-none-eabi-9-2020-q2-update-x86_64-linux.tar.bz2
-RUN tar -xf gcc-arm-none-eabi-9-2020-q2-update-x86_64-linux.tar.bz2
-RUN rm *.bz2
-RUN mbed config -G ARM_PATH /mbed
+# install mbed-cli
+RUN pip3 install requests click mbed-cli mbed-cloud-sdk manifest-tool==v1.5.2 tornado posix_ipc
 
-#clone repo, update to copy it over given that its already been cloned to get the Dockerfile
-WORKDIR /home
-RUN git clone --branch docker https://github.com/armmbed/virtual-demo-for-pelion
+# Add pelion-client and webapp
+ADD mbed-cloud-client-example /build/mbed-cloud-client-example
+ADD sim-webapp /build/sim-webapp
 
-#mbed deploy
-WORKDIR virtual-demo-for-pelion/mbed-cloud-client-example
-RUN mbed deploy
+#
+# phase-1: initialize pelion-client
+#
+WORKDIR /build/mbed-cloud-client-example
 
-#copy my certificate
-COPY mbed-cloud-client-example/mbed_cloud_dev_credentials.c .
+# deploy mbed lib deps and remove unused to save space
+RUN mbed config root . \
+ && mbed deploy \
+ && rm -rf mbed-os/ \
+ && rm -rf drivers/
 
-#run the compliation and make processes
+# initialize cmake
 RUN python3 pal-platform/pal-platform.py deploy --target=x86_x64_NativeLinux_mbedtls generate
-WORKDIR __x86_x64_NativeLinux_mbedtls
-RUN cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=./../pal-platform/Toolchain/GCC/GCC.cmake -DEXTERNAL_DEFINE_FILE=./../define.txt
-RUN make mbedCloudClientExample.elf
-WORKDIR Release
+WORKDIR /build/mbed-cloud-client-example/__x86_x64_NativeLinux_mbedtls
+RUN cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=./../pal-platform/Toolchain/GCC/GCC.cmake -DEXTERNAL_DEFINE_FILE=./../define.txt \
+    && make mbedCloudClientExample.elf
 
-#start the app on docker run
-CMD ./mbedCloudClientExample.elf
+EXPOSE 8888
 
+WORKDIR /build/sim-webapp
+
+CMD ["python3", "sim-webapp.py"]

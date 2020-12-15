@@ -6,84 +6,72 @@ An example demo walkthrough script is provided that gives an example of where th
 
 ![Pelion Virtual Demo GUI](images/PDMvirtualDemo.jpg)
 
-## Using the demo
-We've made this demo available in three forms
-1. Use Docker, NPM, and the docker script files and instructions to build and run the demo on your Windows or Mac machine.
-2. Clone this github repo to your local build environment, add your credentials, build and run the client, or
-3. Download our VirtualBox VM that comes preconfigured with the build environment in place, add your credentials, finish the build process and run from the VM
-
-In all cases you'll need to have a Pelion Device Management account to use with this demo, visit the [Pelion Device Management](portal.mbedcloud.com) site to sign up for an account if you don't already have one.
+To use this demo you'll need to have a Pelion Device Management account, visit the [Pelion Device Management](portal.mbedcloud.com) site to sign up for an account if you don't already have one.
 
 Running the demo will register a device to your account and allow you to see and write values to and from the device from the device management service in real time via your Internet link. You can view the Pelion Device Management portal in a browser locally on the same machine that is running the demo, or you can split the demo and the browser accross real and virtual machines, run the portal on one machine and the portal on a second machine, etc.
 
-
 ![Screenshot of demo and browser](images/BrowserScreenShot.png)
----
-### Docker
-The demo was created to be built and run in a Linux environment. If you don´t have a linux environment (and don´t want to use our VirtualBox VM to run linux on your machine) then you can use Docker and our docker configuration to run the demo on your machine.
 
-The demo has 2 components
-1. An instance of the Pelion device management client that acts as a fake device generating data, and
-2. A node.js webapp that creates the GUI.
-The Docker method of running this demo has the client built and run inside a linux docker image, and the node.js GUI running natively on your machine. All of the build and launch processes for docker are automated, the GUI requires NPM and a graphical library to be installed.
+## Quick start:
+The demo can be run as a docker container without any code changes or compilation. Docker needs to be installed on the host machine [https://www.docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop).
+A docker image has been prepared and uploaded to the docker hub site, the commands below will pull the pelion/virtual-demo image from docker hub and run and instance on your machine
 
-For full details on how to create and run the docker environment read through the specific [Docker.md](Docker.md) instructions.
+1. Generate an API key from [Pelion Device management Portal](https://portal.mbedcloud.com/). You'll find the API keys in the Access Management section.
 
-### Clone and build the demo
-The demo was written to be built and run in a linux environment using the mbed build tools. If you already have a build environment then you can clone this repo, download a certificate file from the Pelion Device Management service and add it to the mbed-cloud-client-example directory, and build the client portion of this demo.
+2. Start the `pelion/device-simulator` container image replacing `CLOUD_SDK_API_KEY` with your key:
 
-If you have a working build environment then you can go ahead and clone this repo and add your own mbed_cloud_dev_credentials.c file to the mbed-cloud-client-example directory and then build with the following commands. If you want to create a build environment then you can follow the steps on the [Mbed installers webpage](https://os.mbed.com/docs/mbed-os/v6.0/build-tools/install-and-set-up.html)
+    ```
+    docker run --name pelion-demo -p 8888:8888 -e CLOUD_SDK_API_KEY=<YOUR_PELION_API_KEY> pelion/virtual-demo
+    ```
+    
+3. Point your web browser to [http://localhost:8888](http://localhost:8888) to access the user interface of the simulator.
 
-Note the python pal-platform deploy stage requires the python modules `requests` and `click`
+4. Note the deviceID and find the device in your device list on the Pelion Device Management Portal. You can now browse resources and see the data updates from the virtual device in real time.
+
+Kill the demo with CTRL-C. The docker container running this instance of the demo will be suspended. You can choose to come back to this same container and resume it at a later date (the deviceID will be preserved), or you can issue a fresh `docker run` command to create a new device instance and a new device in your device directory.
 ```
-$ cd virtual-demo-for-pelion
-$ cd mbed-cloud-client-example
-$ mbed deploy
-$ python pal-platform/pal-platform.py deploy --target=x86_x64_NativeLinux_mbedtls generate
-$ cd __x86_x64_NativeLinux_mbedtls
-$ cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=./../pal-platform/Toolchain/GCC/GCC.cmake -DEXTERNAL_DEFINE_FILE=./../define.txt
-$ make mbedCloudClientExample.elf
-```
-Run the linux client application from this location after compiling
-```
-$ cd Release
-$ ./mbedCloudClientExample.elf
-```
-wait for the application's output to show that it has registered with Pelion and started pushing resource values, then kill with `ctrl-C`.
-
-Return to the webapp directory in the pelion-virtual-demo parent folder and install electron and the pelion virtual demo GUI:
-```
-$ cd ../../../webapp/
-$ sudo npm install electron
+docker restart pelion-demo
+docker attach pelion-demo
 ```
 
-You're now ready to run the webap using
-`$ npm start`
-Stop the demo by killing the npm instance with `ctrl-C`
+## Technical overview
+The demo has been implemented to be run in 2 parts
+1) an instance of the Pelion device management client built with your certificate that writes sensor values to the linux message queue running inside the docker container
+2) a graphical representation (GUI) of a device that picks up the sensor values from the queue and displays values in a "fake device" so that conversations about managed devices can take place.
 
-### Use our VirtualBox VM
-The PDMVirtualDemo VM is an Ubuntu machine that has all of the build tools and project repo installed, and all of the preparation in place for the build process. You can add your credentials file, finish the build process, and run the demo directly from the virtual machine.
+Our pre-existing docker image has a linux environment and a pre-built set of objects to run the demo. When you use the `docker run` command with your API key as an argument the scripts inside the container use the API key to retrieve a device certificate from your Pelion Device Management account and finalise the compliation of the client using your certificate. The client instance is then run, a `firstrun` file is written to the root of the docker container's linux environment, and the demo is running. The client passes values to the GUI using the linux message queue running inside the container, the the GUI is rendered on port 8888 of your local machine, the vibration values can be seen under the 3313/0/5700 resource for this device listed in the Pelion device management portal.
 
-The Ubuntu user account is username: pelion-virtual-demo, password: pelion
+When you kill the demo with `CTRL-C` you are halting the docker container ´pelion-demo´ but not destroying it. When you start the demo with the supplied launch scripts you are resuming the previously halted container, this solution means that the pelion client is re-used and the same Pelion deviceID used over multiple demo sessions. If you don't use the restart command in the launch scripts and instead issue a `docker run` command then a fresh instance of the docker image will be created as a new container, which in turn means a fresh instance of the client will be executed, and a new deviceID will be issued by Pelion. This would create a growing list of stale devices in the device directory list of the Pelion portal webpage so we use the resume feature instead.
 
-1. Install VirtualBox, download our virtual machine, and import the image to VirtualBox
-2. Run the virtual machine
-3. Download a certificate file from your Pelion Device Management account and copy it to the home/pelion-virtual-demo/virtual-demo-for-pelion/mbed-cloud-client-example directory. You will overwrite the placeholder mbed_cloud_dev_credentials.c file in the client example directory. **HINT** : You may find it easiest to use the Firebox browser inside the virtual machine to log into the Pelion service and download the certificate file directly inside the Ubuntu virtual machine and copy it to the cloud client example directory.
-4. Start the terminal app, you can select it from the favourites bar on the left of the Ubuntu desktop
-5. Issue the commands to build and run the client example for the first time
-```
-$ cd virtual-demo-for-pelion/mbed-cloud-client-example/__x86_x64_NativeLinux_mbedtls
-$ cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=./../pal-platform/Toolchain/GCC/GCC.cmake -DEXTERNAL_DEFINE_FILE=./../define.txt
-$ make mbedCloudClientExample.elf
-$ cd Release
-./mbedCloudClientExample.elf
-```
-The application will make an initial link to the Pelion Device Management service and you'll see values being updated on screen. Kill the application with `ctrl-C`
+## Developing with the virtual device:
+The virtual device docker image and the contents of this github repo can be used together as an environment to tweak and build your own modifications to the demo. Clone this demo to your local machine and use the following commands to mount the cloned directories inside the docker image, the result will be that any code changes you make to the repo's files on your machine can be built and executed inside the docker container.
 
-6. The application is now built and is now ready for repeated use of this demo.
-7. Return to the webapp directory in the pelion-device-demo directory and use npm start to run the demo
+1. Generate an API key from Pelion Device management Portal
+
+2. Start the `pelion/device-simulator` container image from the root of the cloned repo replacing `CLOUD_SDK_API_KEY` with your key:
+
+    ```
+   docker run -it --name pelion-demo-dev -p 8888:8888 -v $(pwd)/sim-webapp:/build/sim-webapp -v $(pwd)/mbed-cloud-client-example:/build/mbed-cloud-client-example -v $(pwd)/tools:/build/tools -e CLOUD_SDK_API_KEY=<YOUR_API_KEY> pelion/virtual-demo bash
+    ```
+This will create a container with the name tag "pelion-demo-dev" that is running the pelion/virtual-demo image with volume links to the sim-webapp, mbed-cloud-client-example, and tools folders on your local machine. You can use the pelion-demo-dev container name if you exit the running container and want to return to it with docker restart and resume commands.
+
+3. You'll be at the bash shell inside the container, you now need to create the build environment to allow the demo to be rebuilt with your changes
+
 ```
-$ cd ../../../webapp/
-$ npm start
+cd ../mbed-cloud-client-example
+mbed config root .
+mbed deploy
+python3 pal-platform/pal-platform.py deploy --target=x86_x64_NativeLinux_mbedtls generate
+cmake
+cd __x86_x64_NativeLinux_mbedtls
+cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=./../pal-platform/Toolchain/GCC/GCC.cmake -DEXTERNAL_DEFINE_FILE=./../define.txt
+cd ../sim-webapp
 ```
-8. When you're ready to stop the demo use `ctrl-C` in the terminal to kill the application
+
+4. To build your changes you can use the sim-webapp.py python script. At the end of each build the script adds a `firstrun` file to the sim-webapp directory to ensure further executions of the script only cause the demo to be executed and not complied again. Similarly a `certexists` file in the root of the docker container ensures that the certificate for your device is only pulled once. To kick a fresh compliation of your code changes use
+
+``` 
+rm firstrun && python3 sim-webapp.py
+```
+
+5. When the system has complied your changes and the demo is running you'll see the console output at the bash shell, and you'll find the webapp running at the localhost:8888 URL on your host machine

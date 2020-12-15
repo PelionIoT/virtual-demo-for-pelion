@@ -23,6 +23,7 @@
 
 class SimpleM2MClient;
 class M2MResource;
+class Commander;
 
 #include <stdint.h>
 
@@ -38,11 +39,13 @@ public:
 
     ~Blinky();
 
-    void init(SimpleM2MClient &client, M2MResource *resource);
+    void init(SimpleM2MClient &client, Commander *commander, M2MResource *resource, long sensor_update_interval);
 
     bool start(const char* pattern, size_t length, bool pattern_restart);
 
     void stop();
+
+    void shake(bool enable);
 
 public:
     // This needs
@@ -70,15 +73,21 @@ private:
 
     SimpleM2MClient *_client;
 
-    M2MResource     *_button_resource;
+    Commander *_commander;
 
-    int              _button_count;
+    M2MResource     *_sensed_res;
+
+    int              _sensed_count;
 
     BlinkyState _state;
 
     bool _restart;
 
     static int8_t _tasklet;
+
+    bool _shake;
+
+    long _sensor_update_interval_s;
 
 };
 #endif /* __BLINKY_H__ */

@@ -1,5 +1,5 @@
 // ----------------------------------------------------------------------------
-// Copyright 2018 ARM Ltd.
+// Copyright 2018-2020 ARM Ltd.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -18,22 +18,20 @@
 
 #include "blinky.h"
 
-#include "nanostack-event-loop/eventOS_event.h"
-#include "nanostack-event-loop/eventOS_event_timer.h"
-#include "ns_hal_init.h"
+#include "sal-stack-nanostack-eventloop/nanostack-event-loop/eventOS_event.h"
+#include "sal-stack-nanostack-eventloop/nanostack-event-loop/eventOS_event_timer.h"
+#include "ns-hal-pal/ns_hal_init.h"
+#include "mbed-trace/mbed_trace.h"
 
 #include "mcc_common_button_and_led.h"
-#include "mbed-trace/mbed_trace.h"
 #include "simplem2mclient.h"
+#include "commander.h"
 #include "m2mresource.h"
 
 #include <assert.h>
-#include <string.h>
-#include "stdio.h"
-#include <fstream>
-#include <iostream>
 #include <string>
-using namespace std;
+
+
 #define TRACE_GROUP "blky"
 
 #define BLINKY_TASKLET_LOOP_INIT_EVENT 0
@@ -43,9 +41,6 @@ using namespace std;
 #define BLINKY_TASKLET_AUTOMATIC_INCREMENT_TIMER 4
 
 #define BUTTON_POLL_INTERVAL_MS 100
-#define AUTOMATIC_INCREMENT_INTERVAL_MS 5000
-
-
 
 int8_t Blinky::_tasklet = -1;
 
@@ -69,11 +64,11 @@ Blinky::Blinky()
 : _pattern(NULL),
   _curr_pattern(NULL),
   _client(NULL),
-  _button_resource(NULL),
+  _sensed_res(NULL),
   _state(STATE_IDLE),
   _restart(false)
 {
-    _button_count = 0;
+    _sensed_count = 0;
 }
 
 Blinky::~Blinky()
@@ -91,7 +86,7 @@ void Blinky::create_tasklet()
 }
 
 // use references to encourage caller to pass this existing object
-void Blinky::init(SimpleM2MClient &client, M2MResource *resource)
+void Blinky::init(SimpleM2MClient &client, Commander *commander, M2MResource *resource, long sensor_update_interval_s)
 {
     // Do not start if resource has not been allocated.
     if (!resource) {
@@ -99,8 +94,9 @@ void Blinky::init(SimpleM2MClient &client, M2MResource *resource)
     }
 
     _client = &client;
-    _button_resource = resource;
-
+    _commander = commander;
+    _sensed_res = resource;
+    _sensor_update_interval_s = sensor_update_interval_s;
     // create the tasklet, if not done already
     create_tasklet();
 }
@@ -180,7 +176,9 @@ bool Blinky::run_step()
         return false;
     }
 
-    mcc_platform_toggle_led();
+    mcc_platform_toggle_led();    
+    // instruct sim. to toggle blink led with the parsed 'delay'
+    _commander->sendMsg("blink", _sensed_res->uri_path(), std::to_string(delay).c_str());
 
     _state = STATE_STARTED;
 
@@ -223,7 +221,7 @@ void Blinky::request_next_loop_event()
 
 void Blinky::request_automatic_increment_event()
 {
-    request_timed_event(BLINKY_TASKLET_AUTOMATIC_INCREMENT_TIMER, ARM_LIB_LOW_PRIORITY_EVENT, AUTOMATIC_INCREMENT_INTERVAL_MS);
+    request_timed_event(BLINKY_TASKLET_AUTOMATIC_INCREMENT_TIMER, ARM_LIB_LOW_PRIORITY_EVENT, _sensor_update_interval_s*1000);
 }
 
 // helper for requesting a event by given type after given delay (ms)
@@ -231,7 +229,7 @@ bool Blinky::request_timed_event(uint8_t event_type, arm_library_event_priority_
 {
     assert(_tasklet >= 0);
 
-    arm_event_t event = { 0 };
+    arm_event_t event;
 
     event.event_type = event_type;
     event.receiver = _tasklet;
@@ -251,67 +249,52 @@ bool Blinky::request_timed_event(uint8_t event_type, arm_library_event_priority_
 void Blinky::handle_buttons()
 {
     assert(_client);
-    assert(_button_resource);
+    assert(_sensed_res);
 
     // this might be stopped now, but the loop should then be restarted after re-registration
     request_next_loop_event();
 
-    if (_client->is_register_called()) {
+    if (_client->is_client_registered()) {
         if (mcc_platform_button_clicked()) {
-            _button_count = _button_resource->get_value_int() + 1;
-            _button_resource->set_value(_button_count);
-            printf("Button resource manually updated. Value %d\n", _button_count);
+#ifdef MBED_CLOUD_CLIENT_TRANSPORT_MODE_UDP_QUEUE
+        if(_client->is_client_paused()) {
+            printf("Calling Pelion Client resumed()\r\n");
+            _client->client_resumed();
+        }
+#endif
+            _sensed_count = _sensed_res->get_value_int() + 1;
+            _sensed_res->set_value(_sensed_count);
+            printf("Button resource manually updated. Value %d\r\n", _sensed_count);
         }
     }
 }
 
-void write_value(int data)
-{
-	printf("write_value function with value %d\n",data);
-	ofstream outfile;
-    outfile.open("../../../data/sensor_value.out");
-	outfile << to_string(data) << endl;
-	outfile.close();
+void Blinky::shake(bool enable) {
+    _shake = enable;
 }
 
 void Blinky::handle_automatic_increment()
 {
     assert(_client);
-    assert(_button_resource);
+    assert(_sensed_res);
 
     // this might be stopped now, but the loop should then be restarted after re-registration
     request_automatic_increment_event();
 
-	char data[10];
-    int randomvib = rand() % 19 + (-9);
-	ifstream infile;
-	infile.open("../../../data/vib.conf");
-	infile >> data;
-	cout << data << endl;
-	int vib_mode = 0;
-	if(strcmp("ON",data) == 0)
-		vib_mode = 1;
-	if(strcmp("OFF",data) == 0)
-		vib_mode = 0;
-	if(vib_mode == 0)
-		randomvib = abs( rand() % 10 );
-	else
-		randomvib = abs( rand() % 10 ) + 20;
-	/*
-    if (_button_count < 10){
-        randomvib = abs(randomvib);
-    }
+    int randomvib = _shake? abs(rand() % 10)+20: abs(rand() % 10);
 
-    if (_button_count > 30){
-        randomvib = randomvib - 4;
-    }
-	*/
+    if (_client->is_client_registered()) {
+#ifdef MBED_CLOUD_CLIENT_TRANSPORT_MODE_UDP_QUEUE
+        if(_client->is_client_paused()) {
+            printf("Calling Pelion Client resumed()\r\n");
+            _client->client_resumed();
+        }
+#endif
 
-    if (_client->is_register_called()) {
-        //_button_count = _button_resource->get_value_int() + randomvib;
-		_button_count = randomvib;
-        _button_resource->set_value(_button_count);
-		write_value(_button_count);
-        printf("Button resource automatically updated. Value %d\n", _button_count);
+ 		_sensed_count = randomvib;
+        _sensed_res->set_value(_sensed_count);
+        _commander->sendMsg("observe", _sensed_res->uri_path(), std::to_string(_sensed_count).c_str());
+
+        printf("Resource(%s) automatically updated. Value %d\r\n", _sensed_res->uri_path(), _sensed_count);
     }
 }
