@@ -115,7 +115,7 @@ class ComSocketHandler(tornado.websocket.WebSocketHandler):
         logging.info("sent (qd_cmd) msg: '%s'", cmd)
 
 
-def gencert():
+def genconcert():
     try:
         open ("certexists", "x")
         # if open worked then cert doesn't exist so lets get that generated
@@ -157,6 +157,10 @@ def gencert():
         # so certexists file already exists, we can just pass through this function
         pass
 
+def genfwcert():
+    subprocess.Popen(['manifest-dev-tool', 'init', '-a', config["api_key"],
+                    '-u', 'https://api.us-east-1.mbedcloud.com'],
+                    cwd='/build/mbed-cloud-client-example/').wait()
 
 
 def build():
@@ -195,8 +199,10 @@ def _main():
         # first-time invocation ?
         open("firstrun", 'x')
         # ..since we reach here, yes
-        # let's generate dev certificate
-        gencert()
+        # generate dev certificate ('mbed_cloud_dev_credentials.c')
+        genconcert()
+        # generate fw certificate ('update_default_resources.c')
+        genfwcert()
         # and build the application
         build()
     except FileExistsError:
