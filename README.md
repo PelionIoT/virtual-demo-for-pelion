@@ -62,13 +62,12 @@ cd ../mbed-cloud-client-example
 mbed config root .
 mbed deploy
 python3 pal-platform/pal-platform.py deploy --target=x86_x64_NativeLinux_mbedtls generate
-cmake
 cd __x86_x64_NativeLinux_mbedtls
 cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=./../pal-platform/Toolchain/GCC/GCC.cmake -DEXTERNAL_DEFINE_FILE=./../define.txt
-cd ../sim-webapp
+cd ../../sim-webapp
 ```
 
-4. To build your changes you can use the sim-webapp.py python script. At the end of each build the script adds a `firstrun` file to the sim-webapp directory to ensure further executions of the script only cause the demo to be executed and not complied again. Similarly a `certexists` file in the root of the docker container ensures that the certificate for your device is only pulled once. To kick a fresh compliation of your code changes use
+4. To build your changes you can use the sim-webapp.py python script. The first build will require all object files to be built, this can take 30+ minutes but subsiquent builds will only rebuild your modifications. At the end of each build the script adds a `firstrun` file to the sim-webapp directory to ensure further executions of the script only cause the demo to be executed and not complied again. Similarly a `certexists` file in the root of the docker container ensures that the certificate for your device is only pulled once. To kick a fresh compliation of your code changes use
 
 ``` 
 rm firstrun && python3 sim-webapp.py
