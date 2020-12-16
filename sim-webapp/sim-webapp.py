@@ -162,7 +162,7 @@ def gencert():
 def build():
     # delete the last instance of the app so that we don't automatically execute the old app if the new build fails
     subprocess.Popen(['rm', 'mbedCloudClientExample.elf'],
-                     cwd='/build/mbed-cloud-client-example/__x86_x64_NativeLinux_mbedtls/Release/').wait()
+                     cwd='/build/mbed-cloud-client-example/__x86_x64_NativeLinux_mbedtls/Debug/').wait()
 
     # spawn process to build pelion-client
     subprocess.Popen(['make', 'mbedCloudClientExample.elf'],
@@ -204,7 +204,7 @@ def _main():
 
     # launch pelion client in a separate process
     subprocess.Popen(['./mbedCloudClientExample.elf'],
-                     cwd='/build/mbed-cloud-client-example/__x86_x64_NativeLinux_mbedtls/Release/')
+                     cwd='/build/mbed-cloud-client-example/__x86_x64_NativeLinux_mbedtls/Debug/')
 
     # launch web app
     app = Application()
