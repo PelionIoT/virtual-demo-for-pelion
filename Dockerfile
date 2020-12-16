@@ -12,14 +12,14 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # install packages
 RUN apt-get update && apt-get -y install \
-    git mercurial \
+    git vim \
     build-essential \
     automake make cmake \
     python3 python3-pip \
  && rm -rf /var/lib/apt/lists/*
 
 # install mbed-cli
-RUN pip3 install requests click mbed-cli manifest-tool==2.1.0 mbed-cloud-sdk tornado posix_ipc
+RUN pip3 install mercurial requests click mbed-cli manifest-tool==2.1.0 mbed-cloud-sdk tornado posix_ipc
 
 # Add pelion-client and webapp
 ADD mbed-cloud-client-example /build/mbed-cloud-client-example
