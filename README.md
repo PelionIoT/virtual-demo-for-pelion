@@ -269,9 +269,9 @@ The virtual device docker image and the contents of this github repo can be used
 2. Start the `pelion/device-simulator` container image from the root of the cloned repo replacing `CLOUD_SDK_API_KEY` with your key:
 
     ```
-   docker run -it --name pelion-demo-dev -p 8888:8888 -v $(pwd)/sim-webapp:/build/sim-webapp -v $(pwd)/mbed-cloud-client-example:/build/mbed-cloud-client-example -v $(pwd)/tools:/build/tools -e CLOUD_SDK_API_KEY=<YOUR_API_KEY> pelion/virtual-demo bash
+   docker run -it --name pelion-demo-dev -p 8888:8888 -v $(pwd):/build -e CLOUD_SDK_API_KEY=<YOUR_API_KEY> pelion/virtual-demo:1.1 bash
     ```
-This will create a container with the name tag "pelion-demo-dev" that is running the pelion/virtual-demo image with volume links to the sim-webapp, mbed-cloud-client-example, and tools folders on your local machine. You can use the pelion-demo-dev container name if you exit the running container and want to return to it with docker restart and resume commands.
+This will create a container with the name tag "pelion-demo-dev" that is running the pelion/virtual-demo image with a bind mount folder on your local machine. You can use the pelion-demo-dev container name if you exit the running container and want to return to it with docker restart and resume commands.
 
 3. You'll be at the bash shell inside the container, you now need to create the build environment to allow the demo to be rebuilt with your changes
 
