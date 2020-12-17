@@ -281,7 +281,8 @@ mbed config root .
 mbed deploy
 python3 pal-platform/pal-platform.py deploy --target=x86_x64_NativeLinux_mbedtls generate
 cd __x86_x64_NativeLinux_mbedtls
-cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=./../pal-platform/Toolchain/GCC/GCC.cmake -DEXTERNAL_DEFINE_FILE=./../define.txt
+cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=./../pal-platform/Toolchain/GCC/GCC.cmake \
+    -DEXTERNAL_DEFINE_FILE=./../define_linux_update.txt -DFOTA_ENABLE=ON -DFOTA_TRACE=ON
 cd ../../sim-webapp
 ```
 
