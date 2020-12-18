@@ -67,7 +67,7 @@ Let's change the firmware code running on the simulator, to simulate a code chan
     Save and exit.
 5.  Compile and build the new firmware:
     ```
-    $ make -C __x86_x64_NativeLinux_mbedtls/ mbedCloudClientExample
+    $ make -C __x86_x64_NativeLinux_mbedtls/ mbedCloudClientExample.elf
     ```
 6. Upon completion a new firmware binary is generated:
     ```
@@ -80,7 +80,7 @@ Let's change the firmware code running on the simulator, to simulate a code chan
     > NOTE: Replace <device_id> with the ID of your device.
 
     ```
-    root@f1428894995e:/build/mbed-cloud-client-example# manifest-dev-tool update -i <device_id> -p __x86_x64_NativeLinux_mbedtls/Debug/mbedCloudClientExample.elf -w
+    $ manifest-dev-tool update -i <device_id> -p __x86_x64_NativeLinux_mbedtls/Debug/mbedCloudClientExample.elf -w
     2020-12-17 15:33:46,713 INFO FW version: 0.0.2
     2020-12-17 15:33:46,714 INFO Uploading FW image __x86_x64_NativeLinux_mbedtls/Debug/mbedCloudClientExample.elf
     [==================================================] 100.00%
