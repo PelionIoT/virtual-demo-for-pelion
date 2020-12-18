@@ -286,10 +286,10 @@ cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=./../p
 cd ../../sim-webapp
 ```
 
-4. To build your changes you can use the sim-webapp.py python script. The first build will require all object files to be built, this can take 30+ minutes but subsiquent builds will only rebuild your modifications. At the end of each build the script adds a `firstrun` file to the sim-webapp directory to ensure further executions of the script only cause the demo to be executed and not complied again. Similarly a `certexists` file in the root of the docker container ensures that the certificate for your device is only pulled once. To kick a fresh compliation of your code changes use
+4. To build your changes you can use the sim-webapp.py python script. The first build will require all object files to be built, this can take 30+ minutes but subsequent builds will only rebuild your modifications. At the end of each build the script adds a marker`firstrun` file to the sim-webapp directory to ensure further executions of the script only cause the demo to be executed and not compiled again. Similarly a `certexists` file in the root of the docker container ensures that the certificate for your device is only pulled once. To kick a fresh compliation of your code changes use
 
 ``` 
-rm firstrun && python3 sim-webapp.py
+rm -f firstrun && python3 sim-webapp.py
 ```
 
-5. When the system has complied your changes and the demo is running you'll see the console output at the bash shell, and you'll find the webapp running at the localhost:8888 URL on your host machine
+5. When the system has compiled your changes and the demo is running you'll see the console output at the bash shell, and you'll find the webapp running at the [localhost:8888](http://localhost:8888) URL on your host machine.
