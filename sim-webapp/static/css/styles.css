@@ -13,6 +13,7 @@
     border: none;
     font-family: 'Electrolize';
     width: 80px;
+    height: 40px;
     color: rgb(238, 211, 211) !important;
     border-color: rgb(54, 50, 50);
 }
