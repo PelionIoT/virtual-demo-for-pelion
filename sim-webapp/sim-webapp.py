@@ -198,14 +198,14 @@ def _main():
         # generate fw certificate ('update_default_resources.c')
         genfwcert()
         # raise flag so that we don't regenerate on next run
-        os.mknod('certexists')
+        open('certexists', 'w').close()
 
     # check if we need to build app
     if not os.path.isfile('firstrun'):
         # build application
         build()
         # raise flag so that we don't rebuild on next run
-        os.mknod('firstrun')
+        open('firstrun', 'w').close()
 
     # launch pelion client in a separate process
     subprocess.Popen(['./mbedCloudClientExample.elf'],
