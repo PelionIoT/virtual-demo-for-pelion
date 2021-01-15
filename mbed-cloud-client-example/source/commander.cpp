@@ -12,6 +12,7 @@
 
 #define MQUEUE_CMD "/mqueue-cmd"
 #define MQUEUE_RESP "/mqueue-resp"
+#define MQUEUE_FOTA "/mqueue-fota"
 #define QUEUE_PERMISSIONS 0660
 #define MAX_MESSAGES 10
 #define MAX_MSG_SIZE 256
@@ -31,13 +32,19 @@ Commander::Commander(SimpleM2MClient &client, Blinky &blinky)
 
   if ((qd_cmd = mq_open(MQUEUE_CMD, O_RDONLY | O_CREAT, QUEUE_PERMISSIONS,
                         &attr)) == -1) {
-    perror("Server: mq_open (qd_cmd)");
+    perror("Commander: mq_open (qd_cmd)");
     exit(1);
   }
 
   if ((qd_resp = mq_open(MQUEUE_RESP, O_WRONLY | O_CREAT, QUEUE_PERMISSIONS,
                          &attr)) == -1) {
-    perror("Server: mq_open (qd_resp)");
+    perror("Commander: mq_open (qd_resp)");
+    exit(1);
+  }
+
+  if ((qd_fota = mq_open(MQUEUE_FOTA, O_RDONLY | O_CREAT, QUEUE_PERMISSIONS,
+                        &attr)) == -1) {
+    perror("Commander: mq_open (qd_fota)");
     exit(1);
   }
 
@@ -58,22 +65,22 @@ void Commander::sendMsg(const char *cmd, const char *params, const char *data) {
   cout << "--> (qd_resp) : " << out_buffer << endl;
 
   if (mq_send(qd_resp, out_buffer, strlen(out_buffer), 0) == -1) {
-    perror("Server: Not able to send response!");
+    perror("[Commander]: Not able to send response!");
   }
 
   cout << "--> (qd_resp) sent." << endl;
 }
 
 void Commander::listen() {
-  std::thread t([&]() {
+  // listen for incoming commands from web UI
+  std::thread t_qd_cmd([&]() {
     char in_buffer[MSG_BUFFER_SIZE];
 
     while (true) {
-      // get the oldest message with highest priority
       ssize_t size;
 
       if (mq_receive(qd_cmd, in_buffer, MSG_BUFFER_SIZE, NULL) == -1) {
-        perror("Server: mq_receive");
+        perror("[Commander]: mq_receive (qd_cmd)");
         exit(1);
       }
 
@@ -100,6 +107,23 @@ void Commander::listen() {
       }
     }
   });
+  t_qd_cmd.detach();
 
-  t.detach();
+  // listen for incoming commands from FOTA subsystem (currently only fw download progress)
+  std::thread t_qd_fota([&]() {
+    char in_buffer[MSG_BUFFER_SIZE];
+
+    while (true) {
+      ssize_t size;
+
+      if (mq_receive(qd_fota, in_buffer, MSG_BUFFER_SIZE, NULL) == -1) {
+        perror("[Commander]: mq_receive (qd_fota)");
+        exit(1);
+      }
+
+      // inform UI to update
+      sendMsg("progress", NULL, in_buffer);
+    }
+  });
+  t_qd_fota.detach();
 }

@@ -17,12 +17,14 @@ function onLoad() {
                 break;
             case "observe":
                 resource_val = response.data;
-                $("#number").text(resource_val);
+                $("#console").text(resource_val);
                 break;
             case "blink":
                 $("#led").css( (led? OFF: ON) );
                 led = !led;
                 break;
+            case "progress":
+                $("#console").text("Downloading " + response.data + "%");
             default:
                 console.log("received unknown paylod: " + message.data);
         }
