@@ -22,6 +22,7 @@
 #define TRACE_GROUP "FOTA"
 
 #include "fota/fota.h"
+#include "fota/fota_app_ifs.h"
 #include "fota/fota_source.h"
 #include "fota/fota_internal.h"
 #include "fota/fota_event_handler.h"
@@ -31,6 +32,7 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 #include <mqueue.h>
 
 #define MQUEUE_FOTA "/mqueue-fota"
@@ -67,16 +69,12 @@ void fota_app_on_download_progress(size_t downloaded_size, size_t current_chunk_
     uint32_t progress = (downloaded_size + current_chunk_size) / total_size;
     uint32_t prev_progress = downloaded_size / total_size;
 
-    // convert int
-    char str[5]; sprintf(str, "%d", progress);
-    
     if (downloaded_size == 0 || ((progress / print_range_percent) > (prev_progress / print_range_percent))) {
-        FOTA_APP_PRINT("Downloading firmware. %" PRIu32 "%c", progress, '%');
-        
-        // send IPC msg to reflect progress
-        if (mq_send(qd_fota, str, strlen(str), 0) == -1) {
-            FOTA_APP_PRINT("not able to send fota response to mqueue!");
-        }
+        FOTA_APP_PRINT("Downloading firmware. %" PRIu32 "%c", progress, '%');        
+        // construct msg to send to queue
+        char msg[255]; sprintf(msg, "fota_app_on_download_progress,%d", progress);
+        // send IPC
+        mq_send(qd_fota, msg, strlen(msg), 0);
     }
 }
 
@@ -103,6 +101,10 @@ int fota_app_on_install_authorization(uint32_t token)
     (void) token; // unused;
     fota_app_authorize_update();
     FOTA_APP_PRINT("Install authorization granted");
+    // construct msg to send to queue
+    char msg[255]; sprintf(msg, "fota_app_on_install_authorization,%s", "Install authorization granted");
+    // send IPC
+    mq_send(qd_fota, msg, strlen(msg), 0);
     return FOTA_STATUS_SUCCESS;
 }
 
@@ -133,6 +135,7 @@ int fota_app_on_download_authorization(
         candidate_info->component_name,
         curr_semver, new_semver
     );
+
     FOTA_APP_PRINT("Update priority %" PRIu32, candidate_info->priority);
 
     if (candidate_info->payload_format == FOTA_MANIFEST_PAYLOAD_FORMAT_DELTA) {
@@ -146,6 +149,11 @@ int fota_app_on_download_authorization(
     }
     FOTA_APP_PRINT("---------------------------------------------------");
     FOTA_APP_PRINT("Download authorization granted");
+
+    char msg[255]; sprintf(msg, "fota_app_on_download_authorization,%s", "Download authorization granted");
+    // send IPC
+    mq_send(qd_fota, msg, strlen(msg), 0);
+
     fota_app_authorize_update();
     /* Application can reject an update in the following way
         fota_app_reject_update(127);
@@ -157,5 +165,32 @@ int fota_app_on_download_authorization(
     */
     return FOTA_STATUS_SUCCESS;
 }
+
+#if defined(TARGET_LIKE_LINUX) && !defined(USE_ACTIVATION_SCRIPT)  // e.g. Yocto target have different update activation logic residing outside of the example
+// Simplified Linux use case example.
+// For MAIN component update the the binary file current process is running.
+// Simulate component update by just printing its name.
+// After the installation callback returns, FOTA will "reboot" by calling pal_osReboot().
+
+int fota_app_on_install_candidate(const char *candidate_fs_name, const manifest_firmware_info_t *firmware_info)
+{
+    int ret = FOTA_STATUS_SUCCESS;
+    if (0 == strncmp(FOTA_COMPONENT_MAIN_COMPONENT_NAME, firmware_info->component_name, FOTA_COMPONENT_MAX_NAME_SIZE)) {
+        // installing MAIN component
+        ret = fota_component_install_main(candidate_fs_name);
+        if (FOTA_STATUS_SUCCESS == ret) {
+            FOTA_APP_PRINT("Successfully installed MAIN component\n");
+             // construct msg to send to queue
+            char msg[255]; sprintf(msg, "fota_app_on_install_candidate,%s", "New firmware installed");
+            // send IPC
+            mq_send(qd_fota, msg, strlen(msg), 0);
+            // FOTA does support a case where installer method reboots the system.
+        }
+    } else {
+        FOTA_APP_PRINT("%s component installed (example)\n", firmware_info->component_name);
+    }
+    return ret;
+}
+#endif // defined(TARGET_LIKE_LINUX) && !defined(USE_ACTIVATION_SCRIPT)
 
 #endif  // MBED_CLOUD_CLIENT_FOTA_ENABLE

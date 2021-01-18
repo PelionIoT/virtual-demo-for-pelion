@@ -133,8 +133,16 @@ void Commander::listen() {
         exit(1);
       }
 
+      char *running = strdupa(in_buffer);
+      // received with format: <callback_name>, msg
+      // split
+      char *callback_name = strsep(&running, ",");
+      char *msg =  strsep(&running, ",");
       // inform UI to update
-      sendMsg("progress", NULL, in_buffer);
+      sendMsg("fota", callback_name, msg);
+      // clear resources
+      memset(in_buffer, 0, MSG_BUFFER_SIZE);
+      free(running);
     }
   });
   t_qd_fota.detach();
