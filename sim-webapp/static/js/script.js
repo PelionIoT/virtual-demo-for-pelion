@@ -15,6 +15,10 @@ function onLoad() {
                 device_id = response.data.substr(response.data.length - 7);
                 $("#deviceID").text(device_id);
                 break;
+            case "getFW":
+                device_id = response.data;
+                $("#firmware").text(device_id);
+                break;                
             case "observe":
                 resource_val = response.data;
                 $("#console").text(resource_val);
@@ -30,9 +34,14 @@ function onLoad() {
         }
     }
 
-    // onload, we need to retrieve device ID
+    // onload, we need to retrieve device ID and FW version
     wss.onopen = (event) => {
+        // retrieve device id
         var cmd = { cmd: "getID" };
+        wss.send(JSON.stringify(cmd));
+
+        // retrieve firmware version
+        var cmd = { cmd: "getFW" };
         wss.send(JSON.stringify(cmd));
     }
 

@@ -3,6 +3,9 @@
 #include "json.h"
 #include "simplem2mclient.h"
 
+#include "fota/fota_component.h"
+#include "fota/fota_curr_fw.h"
+
 #include <cstring>
 #include <fcntl.h>
 #include <iostream>
@@ -17,6 +20,7 @@
 #define MAX_MESSAGES 10
 #define MAX_MSG_SIZE 256
 #define MSG_BUFFER_SIZE MAX_MSG_SIZE + 1
+
 
 using json = nlohmann::json;
 using namespace std;
@@ -98,6 +102,14 @@ void Commander::listen() {
         if (endpoint) {
           sendMsg("getID", NULL, endpoint->internal_endpoint_name.c_str());
         }
+
+      } else if (cmd == "getFW") {
+        // extract firmware version from FOTA subsystem
+        fota_header_info_t header_info;
+        fota_curr_fw_read_header(&header_info);
+        char semver[FOTA_COMPONENT_MAX_SEMVER_STR_SIZE];
+        fota_component_version_int_to_semver(header_info.version, semver);
+        sendMsg("getFW", NULL, semver);
 
       } else if (cmd == "shake") {
         _blinky.shake(json_msg["enable"]);
