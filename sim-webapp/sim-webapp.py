@@ -55,8 +55,11 @@ class Application(tornado.web.Application):
             static_path=os.path.join(os.path.dirname(__file__), "static"),
             xsrf_cookies=True,
         )
-
+        # disable web logging access
+        logging.getLogger('tornado.access').disabled = True
+        # initialize mqueue handler
         MqueuHandler()
+        
         super().__init__(handlers, **settings)
 
 
@@ -67,13 +70,13 @@ class MqueuHandler():
         mqueue_listen_thread.start()
 
     def mqueue_resp_listen(name):
-        logging.info("listening on (qd_resp)...")
+        # logging.info("listening on (qd_resp)...")
         asyncio.set_event_loop(asyncio.new_event_loop())
 
         while True:
             s, _ = qd_resp.receive()
             s = s.decode()
-            logging.info("got (qd_resp) msg: '%s'", s)
+            # logging.info("got (qd_resp) msg: '%s'", s)
             ComSocketHandler.send_update(s)
 
 
@@ -90,11 +93,11 @@ class ComSocketHandler(tornado.websocket.WebSocketHandler):
         return {}
 
     def open(self):
-        logging.info("open(self)")
+        # logging.info("open(self)")
         ComSocketHandler.waiters.add(self)
 
     def on_close(self):
-        logging.info("on_close(self)")
+        # logging.info("on_close(self)")
         ComSocketHandler.waiters.remove(self)
 
     @classmethod
@@ -105,15 +108,15 @@ class ComSocketHandler(tornado.websocket.WebSocketHandler):
             except:
                 logging.error("Error sending message", exc_info=True)
 
-        logging.info("sent (ws) msg to %d waiters", len(cls.waiters))
+        # logging.info("sent (ws) msg to %d waiters", len(cls.waiters))
 
     def on_message(self, message):
-        logging.info("got (ws) msg: %r", message)
+        # logging.info("got (ws) msg: %r", message)
 
         # add null termination expected from C backend
         cmd = message.encode('ascii') + b'\x00'
         qd_cmd.send(cmd)
-        logging.info("sent (qd_cmd) msg: '%s'", cmd)
+        # logging.info("sent (qd_cmd) msg: '%s'", cmd)
 
 
 def genconcert():
