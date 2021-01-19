@@ -13,7 +13,7 @@ Running the demo will register a device to your account and allow you to see and
 ![Screenshot of demo and browser](images/BrowserScreenShot.png)
 
 ## Quick start:
-The demo can be run as a docker container without any code changes or compilation. Docker needs to be installed on the host machine [https://www.docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop).
+The simulator can be run as a docker container without any code changes or compilation. Docker needs to be installed on the host machine [https://www.docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop).
 A docker image has been prepared and uploaded to the docker hub site, the commands below will pull the pelion/virtual-demo image from docker hub and run and instance on your machine
 
 1. Generate an API key from [Pelion Device management Portal](https://portal.mbedcloud.com/). You'll find the API keys in the Access Management section.
@@ -21,7 +21,7 @@ A docker image has been prepared and uploaded to the docker hub site, the comman
 2. Start the `pelion/device-simulator` container image replacing `CLOUD_SDK_API_KEY` with your key:
 
     ```
-    docker run --name pelion-demo -p 8888:8888 -e CLOUD_SDK_API_KEY=<YOUR_PELION_API_KEY> pelion/virtual-demo:1.1
+    docker run --name pelion-demo -p 8888:8888 -e CLOUD_SDK_API_KEY=<YOUR_PELION_API_KEY> pelion/virtual-demo
     ```
     
 3. Point your web browser to [http://localhost:8888](http://localhost:8888) to access the user interface of the simulator.
@@ -39,25 +39,35 @@ The docker image comes already pre-configured with the necessary tools to perfor
 
 > For more information about Pelion Device Management update, please consult our [documentation page.](https://developer.pelion.com/docs/device-management/current/updating-firmware/index.html)
 
-Let's change the firmware code running on the simulator, to simulate a code change and subsequent firmware update:
+Let's change the firmware code running on the simulator, to simulate a code change and subsequent firmware update. Let the simulator docker container running and open a new terminal. Then:
 
-1. Make sure the simulator container is running and note the `'Container ID'` column:
+1. Clone the simulator repository locally:
 
     ```
-    $ docker ps
-    CONTAINER ID   IMAGE                     COMMAND                  CREATED          STATUS          PORTS                    NAMES
-    b7b30f49982c   pelion/virtual-demo:1.1   "python3 sim-webapp.…"   23 minutes ago   Up 23 minutes   0.0.0.0:8888->8888/tcp   recur
-    sing_jennings
+    $ git clone https://github.com/PelionIoT/virtual-demo-for-pelion.git && \
+    cd virtual-demo-for-pelion
     ```
 
-2. Access a shell inside the container:
+2. Switch to the directory where the 'firmware' source code is located:
     ```
-    $ docker exec -it b7b30f49982c bash
+    $ cd mbed-cloud-client-example
     ```
-3. Switch to the main program source directory:
+
+3. Copy `credentials` and `manifest-tool` configuration for FOTA from the running docker container:
+
     ```
-    $ cd /build/mbed-cloud-client-example/
+    $ docker cp pelion-demo:/build/mbed-cloud-client-example/mbed_cloud_dev_credentials.c . && \
+    docker cp pelion-demo:/build/mbed-cloud-client-example/update_default_resources.c . && \
+    docker cp pelion-demo:/build/mbed-cloud-client-example/.manifest-dev-tool .
     ```
+
+    > NOTE: If you are planning to apply a delta patch update, you must also save the existing running firmware, otherwise you can skip the following step:
+    
+    ```
+    $ mkdir firmwares
+    $ docker cp pelion-demo:/build/mbed-cloud-client-example/__x86_x64_NativeLinux_mbedtls/Debug/mbedCloudClientExample.elf ./firmwares/current_fw.bin
+
+
 4. Use '`vi main.cpp`', then go to `line :273` and insert the following code to simulate a code change:
     ```
     for (int i=0; i<5; i++) {
@@ -65,55 +75,80 @@ Let's change the firmware code running on the simulator, to simulate a code chan
     }
     ```
     Save and exit.
-5.  Compile and build the new firmware:
+
+
+5.  Bootstrap a new development container of the simulator image to use it for building our new firmware. Notice that we local mount the credentials and the manifest configuration we copied in step 3 above, so that they are available from inside the new container: 
     ```
-    $ make -C __x86_x64_NativeLinux_mbedtls/ mbedCloudClientExample.elf
+    $ docker run -it --name pelion-demo-dev \
+     -v $(pwd)/main.cpp:/build/mbed-cloud-client-example/main.cpp \
+     -v $(pwd)/mbed_cloud_dev_credentials.c:/build/mbed-cloud-client-example/mbed_cloud_dev_credentials.c \
+     -v $(pwd)/update_default_resources.c:/build/mbed-cloud-client-example/update_default_resources.c \
+     -v $(pwd)/.manifest-dev-tool/:/build/mbed-cloud-client-example/.manifest-dev-tool/ \
+     pelion/virtual-demo bash
     ```
-6. Upon completion a new firmware binary is generated:
+    > NOTE: If planning to perform delta patch update, we need to local mount the 'firmwares/' directory too. Simply append `-v $(pwd)/firmwares/:/build/mbed-cloud-client-example/firmwares` in the command above.
+
+
+You can now choose either to perform a full firmware image update or a delta patch. Follow the appropriate section below.
+
+### Full Image Update
+
+1. Switch to the firmware directory:
+    ```
+    cd /build/mbed-cloud-client-example/
+    ```
+
+2. Build the new firmware image:
+    ```
+    make -C __x86_x64_NativeLinux_mbedtls/mbedCloudClientExample.elf
+    ```
+
+3. Upon completion, a new firmware binary is generated:
     ```
     $ ls -l /build/mbed-cloud-client-example/__x86_x64_NativeLinux_mbedtls/Debug/mbedCloudClientExample.elf
-
-    -rwxr-xr-x 1 root root 6549288 Dec 17 13:31 mbedCloudClientExample.elf
+    
+    -rwxr-xr-x 1 root root 6562112 Jan 19 14:32 /build/mbed-cloud-client-example/__x86_x64_NativeLinux_mbedtls/Debug/mbedCloudClientExample.elf
     ```
-7. We now need to genarate the firmware manifest describing the update, upload it to portal to start an update campaign. The `manifest-tool` can perform all this in one step:
-
-    > NOTE: Replace <device_id> with the ID of your device.
+4. We now need to genarate the firmware manifest describing the update, upload it to portal to start an update campaign. The `manifest-tool` can perform all this in one step:
 
     ```
-    $ manifest-dev-tool update -i <device_id> -p __x86_x64_NativeLinux_mbedtls/Debug/mbedCloudClientExample.elf -w
-    2020-12-17 15:33:46,713 INFO FW version: 0.0.2
-    2020-12-17 15:33:46,714 INFO Uploading FW image __x86_x64_NativeLinux_mbedtls/Debug/mbedCloudClientExample.elf
-    [==================================================] 100.00%
-    [==================================================] 100.00%
-    2020-12-17 15:35:23,901 INFO Uploaded FW image http://firmware-catalog-media-ca57.s3.dualstack.us-east-1.amazonaws.com/0158778da56002420a014c1100000000/01767155f4d00000000000010010030f
-    2020-12-17 15:35:24,758 INFO Vendor-ID: 93aac9091a8d4d8f87ce8823bd4055f1
-    2020-12-17 15:35:24,759 INFO Class-ID: 9d51cd5d9f3f4d2eb2d437394c491955
-    2020-12-17 15:35:25,867 INFO Uploaded manifest ID: 01767157745700000000000100100315
-    2020-12-17 15:35:26,971 INFO Created Campaign ID: 017671577806000000000001001000f8
-    2020-12-17 15:35:29,244 INFO Started Campaign ID: 017671577806000000000001001000f8
-    2020-12-17 15:35:30,118 INFO Campaign state: publishing
-    2020-12-17 15:35:36,233 INFO Campaign state: autostopped
-    2020-12-17 15:35:36,234 INFO Campaign is finished in state: autostopped
-    2020-12-17 15:35:36,845 INFO 1 devices successfully updated
-    2020-12-17 15:35:36,846 INFO Cleaning up resources.
-    2020-12-17 15:35:38,457 INFO Deleted campaign 017671577806000000000001001000f8
-    2020-12-17 15:35:39,556 INFO Deleted manifest ID: 01767157745700000000000100100315
-    2020-12-17 15:35:40,582 INFO Deleted FW image 0176715767b400000000000100100314
+    $ manifest-dev-tool update -p __x86_x64_NativeLinux_mbedtls/Debug/mbedCloudClientExample.elf -w -n -v 0.2.0
+
+    2021-01-19 13:29:51,924 INFO FW version: 0.2.0
+    2021-01-19 13:29:51,929 INFO Uploading FW image __x86_x64_NativeLinux_mbedtls/Debug/mbedCloudClientExample.elf
+    2021-01-19 13:29:53,529 INFO Uploaded FW image http://firmware-catalog-media-ca57.s3.dualstack.us-east-1.amazonaws.com/u7chWKTSvQdSK5PXUFyxWu
+    2021-01-19 13:29:53,531 INFO Vendor-ID: f214c5a40a7c41588f4a8f2357880e4a
+    2021-01-19 13:29:53,532 INFO Class-ID: 66eb99760e98456d8436dc223c7332ff
+    2021-01-19 13:29:53,681 INFO Created manifest in v3 schema for full update campaign
+    2021-01-19 13:29:54,225 INFO Uploaded manifest ID: 01771ad664fd0000000000010010028e
+    2021-01-19 13:29:54,636 INFO Created Campaign ID: 01771ad6669b00000000000100100323
+    2021-01-19 13:29:56,384 INFO Started Campaign ID: 01771ad6669b00000000000100100323
+    2021-01-19 13:29:56,749 INFO Campaign state: publishing
+    2021-01-19 13:29:59,846 INFO Campaign state: autostopped
+    2021-01-19 13:29:59,846 INFO Campaign is finished in state: autostopped
+    2021-01-19 13:30:00,606 INFO ----------------------------
+    2021-01-19 13:30:00,607 INFO     Campaign Summary
+    2021-01-19 13:30:00,608 INFO ----------------------------
+    2021-01-19 13:30:00,608 INFO  Successfully updated:   1
+    2021-01-19 13:30:00,609 INFO  Failed to update:       0
+    2021-01-19 13:30:00,609 INFO  Skipped:                0
+    2021-01-19 13:30:00,610 INFO  Pending:                0
+    2021-01-19 13:30:00,610 INFO  Total in this campaign: 1
     ```
 
-    At the console prompt of the simulator, notice the firmware update being initiated then downloaded and applied:
+    At the console prompt of the simulator, notice the firmware update being initiated, then downloaded and applied:
     ```
     [FOTA INFO] fota.c:596: Firmware update initiated.
     [FOTA DEBUG] fota.c:628: Pelion FOTA manifest is valid
-    [FOTA DEBUG] fota.c:651: get manifest : curr version 0, new version 2
+    [FOTA DEBUG] fota.c:651: get manifest : curr version 131072, new version 196608
     [FOTA DEBUG] fota_source_profile_full.cpp:444: Reporting resource: /10252/0/2: value: 3
     [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 3 type: 0
     [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 4 type: 0
     [FOTA DEBUG] fota.c:555: Download Authorization requested
     [FOTA] ---------------------------------------------------
-    [FOTA] Updating component MAIN from version 0.0.0 to 0.0.2
+    [FOTA] Updating component MAIN from version 0.0.0 to 0.2.0
     [FOTA] Update priority 0
-    [FOTA] Update size 6549336B
+    [FOTA] Update size 6562112B
     [FOTA] ---------------------------------------------------
     [FOTA] Download authorization granted
     [FOTA DEBUG] fota_event_handler.c:61: FOTA event-handler got event [type= 4]
@@ -148,20 +183,13 @@ Let's change the firmware code running on the simulator, to simulate a code chan
     [FOTA] Downloading firmware. 100%
     [FOTA INFO] fota.c:1509: Firmware download finished
     [FOTA DEBUG] fota_source_profile_full.cpp:444: Reporting resource: /10252/0/2: value: 6
-    --> (qd_resp) : {"cmd":"observe","data":"3","params":"3313/0/5700"}
-    --> (qd_resp) sent.
-    Resource(3313/0/5700) automatically updated. Value 3
-    [I 201217 15:35:33 sim-webapp:75] got (qd_resp) msg: '{"cmd":"observe","data":"3","params":"3313/0/5700"}'
-    [I 201217 15:35:33 sim-webapp:107] sent (ws) msg to 1 waiters
     [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 4 type: 0
     [FOTA DEBUG] fota.c:1460: Install Authorization requested
     [FOTA] Install authorization granted
-    Message status callback: (3313/0/5700) Message sent to server
+    [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 3 type: 0
     [FOTA DEBUG] fota_event_handler.c:61: FOTA event-handler got event [type= 4]
     [FOTA INFO] fota.c:1346: Install authorization granted.
     [FOTA DEBUG] fota_source_profile_full.cpp:444: Reporting resource: /10252/0/2: value: 7
-    Message status callback: (3313/0/5700) Message delivered
-    [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 3 type: 0
     [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 4 type: 0
     [FOTA INFO] fota.c:804: Installing new version for component MAIN
     [FOTA INFO] fota_candidate.c:224: Found an encrypted image at address 0x0
@@ -186,71 +214,122 @@ Let's change the firmware code running on the simulator, to simulate a code chan
     Starting developer flow
     Developer credentials already exist, continuing..
     Generating random from /dev/random, this can take a long time!
-    Application ready. Build at: Dec 16 2020 16:07:33
+    Application ready. Build at: Jan 19 2021 11:26:14
     Network initialized, registering...
     [FOTA DEBUG] fota.c:371: init start
     [FOTA DEBUG] fota_event_handler.c:61: FOTA event-handler got event [type= 1]
     [FOTA DEBUG] fota_source_profile_full.cpp:277: Announcing FOTA state is 1
-    [FOTA INFO] fota.c:425: Registered MAIN component, version 0.0.2
+    [FOTA INFO] fota.c:425: Registered MAIN component, version 0.3.0
     [FOTA DEBUG] fota.c:435: After upgrade, issuing post install actions
     [FOTA DEBUG] fota_block_device_linux.c:77: FOTA BlockDevice init file is fota_candidate
-    [FOTA DEBUG] fota.c:327: install verify component name MAIN, version 2
+    [FOTA DEBUG] fota.c:327: install verify component name MAIN, version 196608
     [FOTA DEBUG] fota.c:467: init complete
     Commander initialized and waiting for cmds...
     Client registered
-    Endpoint Name: 0176715249f60000000000010016ba3a
-    Device ID: 0176715249f60000000000010016ba3a
+    Endpoint Name: 01771a7172b70000000000010016f8dc
+    Device ID: 01771a7172b70000000000010016f8dc
     [FOTA DEBUG] fota_event_handler.c:61: FOTA event-handler got event [type= 4]
     Message status callback: (3313/0/5700) subscribed
     ```
 
 ## Delta updates (TBD)
 
+
 1. Switch to the main program source directory:
     ```
     $ cd /build/mbed-cloud-client-example/
     ```
-2. Create a `firmwares/` directory to store fw artifacts:
-    ```
-    $ mkdir firmwares
-    ```
-3. Copy the current running firmware to `firmwares/` directory:
-    ```
-    $ cp __x86_x64_NativeLinux_mbedtls/Debug/mbedCloudClientExample.elf firmwares/current_fw.bin
-    ```
-4. Modify `main.cpp` as suggested above and produce new firmware:
+2. Assuming you've modifed `main.cpp` as suggested above, we can now proceed and produce the new firmware:
     ```
     $ make -C __x86_x64_NativeLinux_mbedtls/ mbedCloudClientExample.elf
     ```
-5. Copy the new firmware to `firmwares/` directory:
+3. Copy the new firmware to `firmwares/` directory:
     ```
     $ cp __x86_x64_NativeLinux_mbedtls/Debug/mbedCloudClientExample.elf firmwares/new_fw.bin
     ```
-6. The `firmwares/` directory should now contain the following:
+4. The `firmwares/` directory should now contain both the new firmware(`new_fw.bin`) and the current running one (`current_fw.bin`)following:
     ```
-    $ ls -l
-    total 12792
-    -rwxr-xr-x 1 root root 6549288 Dec 17 15:56 current_fw.bin
-    -rwxr-xr-x 1 root root 6549336 Dec 17 15:57 new_fw.bin
+    $  ls -l firmwares/
+    
+    total 12824
+    -rwxr-xr-x 1 1000 1000 6562072 Jan 19 15:29 current_fw.bin
+    -rwxr-xr-x 1 root root 6562112 Jan 19 15:51 new_fw.bin
     ```
-7. We are now ready to generate the delta firmware using the `manifest-delta-tool`:
+5. We are now ready to generate the delta firmware using the `manifest-delta-tool`:
     ```
     $ manifest-delta-tool -c firmwares/current_fw.bin -n firmwares/new_fw.bin -o firmwares/delta-patch.bin
-    
-    2020-12-17 15:59:06,998 INFO Current tool version PELION/BSDIFF001
-    Wrote diff file firmwares/delta-patch.bin, size 352599. Max undeCompressBuffer frame size was 512, max deCompressBuffer frame size was 222.
+
+    2021-01-19 13:36:30,437 INFO Current tool version PELION/BSDIFF001
+    Wrote diff file firmwares/delta-patch.bin, size 166735. Max undeCompressBuffer frame size was 512, max deCompressBuffer frame size was 40.
+    root@323939aac5da:/build/mbed-cloud-client
     ```
     
-8. Upload `firmwares/delta-patch.bin` image to Pelion portal and note the firmware URL.
-9. Generate the delta manifest:
-    ```    
-    $ manifest-dev-tool create \
-    --payload-url <firmware_url> \
-    --payload-path firmwares/delta-patch.yaml \
-    --fw-version 0.3.0 \
-    --output firmwares/delta-update-manifest.bin
+6. Start the update campaign
     ```
-10. Upload `firmwares/delta-update-manifest.bin` to Pelion portal and start an update campaign.
+    $ manifest-dev-tool update -p firmwares/delta-patch.bin -w -n -v 0.3.0
+
+    2021-01-19 15:51:53,622 INFO FW version: 0.3.0
+    2021-01-19 15:51:53,624 INFO Uploading FW image firmwares/delta-patch.bin
+    2021-01-19 15:51:54,571 INFO Uploaded FW image http://firmware-catalog-media-ca57.s3.dualstack.us-east-1.amazonaws.com/53ig3icEBJEa1QSXHiqG1n
+    2021-01-19 15:51:54,572 INFO Vendor-ID: eb91fb344d3246359a56f6ae958a6b3e
+    2021-01-19 15:51:54,572 INFO Class-ID: 0f2826c9586a4ea199400a34e1afc258
+    2021-01-19 15:51:54,660 INFO Created manifest in v3 schema for delta update campaign
+    2021-01-19 15:51:55,119 INFO Uploaded manifest ID: 01771b5869b80000000000010010035b
+    2021-01-19 15:51:55,576 INFO Created Campaign ID: 01771b586b840000000000010010036d
+    2021-01-19 15:51:57,335 INFO Started Campaign ID: 01771b586b840000000000010010036d
+    2021-01-19 15:51:57,699 INFO Campaign state: publishing
+    ```
+
+    At the console prompt of the simulator, notice the firmware update being initiated, then downloaded and applied:
+    ```
+    [FOTA INFO] fota.c:596: Firmware update initiated.
+    [FOTA DEBUG] fota.c:628: Pelion FOTA manifest is valid
+    [FOTA DEBUG] fota.c:651: get manifest : curr version 0, new version 196608
+    [FOTA DEBUG] fota_source_profile_full.cpp:444: Reporting resource: /10252/0/2: value: 3
+    [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 3 type: 0
+    [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 4 type: 0
+    [FOTA DEBUG] fota.c:555: Download Authorization requested
+    [FOTA] ---------------------------------------------------
+    [FOTA] Updating component MAIN from version 0.0.0 to 0.3.0
+    [FOTA] Update priority 0
+    [FOTA] Delta update. Patch size 358023B full image size 6562112B
+    [FOTA] ---------------------------------------------------
+    [FOTA] Download authorization granted
+    [FOTA DEBUG] fota_event_handler.c:61: FOTA event-handler got event [type= 4]
+    [FOTA INFO] fota.c:1351: Download authorization granted.
+    [FOTA DEBUG] fota_block_device_linux.c:77: FOTA BlockDevice init file is fota_candidate
+    [FOTA DEBUG] fota.c:1128: FOTA BlockDevice initialized
+    [FOTA DEBUG] fota.c:522: New FOTA key saved
+    [FOTA DEBUG] fota.c:533: FOTA encryption engine initialized
+    [FOTA DEBUG] fota.c:1216: Erasing storage at 0, size 4294967296
+    [FOTA DEBUG] fota.c:1258: FOTA delta engine initialized
+    [FOTA DEBUG] fota_source_profile_full.cpp:444: Reporting resource: /10252/0/2: value: 4
+    [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 3 type: 0
+    [FOTA] Downloading firmware. 3%
+    [FOTA] Downloading firmware. 5%
+    [FOTA] Downloading firmware. 11%
+    [FOTA] Downloading firmware. 19%
+    [FOTA] Downloading firmware. 23%
+    [FOTA] Downloading firmware. 27%
+    [FOTA] Downloading firmware. 32%
+    [FOTA] Downloading firmware. 36%
+    [FOTA] Downloading firmware. 40%
+    [FOTA] Downloading firmware. 45%
+    [FOTA] Downloading firmware. 54%
+    [FOTA] Downloading firmware. 59%
+    [FOTA] Downloading firmware. 63%
+    [FOTA] Downloading firmware. 68%
+    [FOTA] Downloading firmware. 72%
+    [FOTA] Downloading firmware. 77%
+    [FOTA] Downloading firmware. 81%
+    [FOTA] Downloading firmware. 86%
+    [FOTA] Downloading firmware. 91%
+    [FOTA] Downloading firmware. 95%
+    [FOTA] Downloading firmware. 100%
+    [FOTA ERROR] fota.c:158: Update aborted: (ret code -42) Failed on fragment event
+    [FOTA DEBUG] fota_source_profile_full.cpp:444: Reporting resource: /10252/0/3: value: 42
+    [FOTA DEBUG] fota_source_profile_full.cpp:444: Reporting resource: /10252/0/2: value: 1
+    ```
 
 ## Technical overview
 The demo has been implemented to be run in 2 parts
@@ -269,7 +348,7 @@ The virtual device docker image and the contents of this github repo can be used
 2. Start the `pelion/device-simulator` container image from the root of the cloned repo replacing `CLOUD_SDK_API_KEY` with your key:
 
     ```
-   docker run -it --name pelion-demo-dev -p 8888:8888 -v $(pwd):/build -e CLOUD_SDK_API_KEY=<YOUR_API_KEY> pelion/virtual-demo:1.1 bash
+   docker run -it --name pelion-demo-dev -p 8888:8888 -v $(pwd):/build -e CLOUD_SDK_API_KEY=<YOUR_API_KEY> pelion/virtual-demo bash
     ```
 This will create a container with the name tag "pelion-demo-dev" that is running the pelion/virtual-demo image with a bind mount folder on your local machine. You can use the pelion-demo-dev container name if you exit the running container and want to return to it with docker restart and resume commands.
 
@@ -286,7 +365,7 @@ cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=./../p
 cd ../../sim-webapp
 ```
 
-4. To build your changes you can use the sim-webapp.py python script. The first build will require all object files to be built, this can take 30+ minutes but subsequent builds will only rebuild your modifications. At the end of each build the script adds a marker`firstrun` file to the sim-webapp directory to ensure further executions of the script only cause the demo to be executed and not compiled again. Similarly a `certexists` file in the root of the docker container ensures that the certificate for your device is only pulled once. To kick a fresh compliation of your code changes use
+4. To build your changes you can use the sim-webapp.py python script. The first build will require all object files to be built, this can take 30+ minutes but subsequent builds will only rebuild your modifications. At the end of each build the script adds a marker `firstrun` file to the sim-webapp directory to ensure further executions of the script only cause the demo to be executed and not compiled again. Similarly a `certexists` file in the root of the docker container ensures that the certificate for your device is only pulled once. To kick a fresh compliation of your code changes use
 
 ``` 
 rm -f firstrun && python3 sim-webapp.py
