@@ -44,9 +44,7 @@ public:
     bool start(const char* pattern, size_t length, bool pattern_restart);
 
     void stop();
-
     void shake(bool enable);
-
 public:
     // This needs
     void event_handler(const arm_event_s &event);

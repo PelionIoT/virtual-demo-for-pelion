@@ -11,7 +11,7 @@ class Commander {
 private:
   SimpleM2MClient &_client;
   Blinky &_blinky;
-  mqd_t qd_cmd, qd_resp; // mqueue descriptors
+  mqd_t qd_cmd, qd_resp, qd_fota; // mqueue descriptors
 
 public:
   Commander(SimpleM2MClient &client, Blinky &blinky);

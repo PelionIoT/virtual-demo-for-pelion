@@ -31,7 +31,6 @@
 #include <assert.h>
 #include <string>
 
-
 #define TRACE_GROUP "blky"
 
 #define BLINKY_TASKLET_LOOP_INIT_EVENT 0
@@ -41,6 +40,12 @@
 #define BLINKY_TASKLET_AUTOMATIC_INCREMENT_TIMER 4
 
 #define BUTTON_POLL_INTERVAL_MS 100
+
+#ifdef MBED_CLOUD_CLIENT_TRANSPORT_MODE_UDP_QUEUE
+#define AUTOMATIC_INCREMENT_INTERVAL_MS 300000 // Update resource periodically every 300 seconds
+#else
+#define AUTOMATIC_INCREMENT_INTERVAL_MS 60000   // Update resource periodically every 60 seconds
+#endif
 
 int8_t Blinky::_tasklet = -1;
 
@@ -175,8 +180,7 @@ bool Blinky::run_step()
         assert(false);
         return false;
     }
-
-    mcc_platform_toggle_led();    
+    mcc_platform_toggle_led();
     // instruct sim. to toggle blink led with the parsed 'delay'
     _commander->sendMsg("blink", _sensed_res->uri_path(), std::to_string(delay).c_str());
 
@@ -280,9 +284,7 @@ void Blinky::handle_automatic_increment()
 
     // this might be stopped now, but the loop should then be restarted after re-registration
     request_automatic_increment_event();
-
     int randomvib = _shake? abs(rand() % 10)+20: abs(rand() % 10);
-
     if (_client->is_client_registered()) {
 #ifdef MBED_CLOUD_CLIENT_TRANSPORT_MODE_UDP_QUEUE
         if(_client->is_client_paused()) {
@@ -290,7 +292,6 @@ void Blinky::handle_automatic_increment()
             _client->client_resumed();
         }
 #endif
-
  		_sensed_count = randomvib;
         _sensed_res->set_value(_sensed_count);
         _commander->sendMsg("observe", _sensed_res->uri_path(), std::to_string(_sensed_count).c_str());
