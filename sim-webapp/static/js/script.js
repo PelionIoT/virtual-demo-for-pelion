@@ -9,7 +9,7 @@ var LARGE_CONSOLE_TEXT_CSS= {'margin': '0px','color': '#bad8fc','font-family': '
 var led = false;
 
 function onLoad() {
-    var url = "ws://" + location.host + "/comsock";
+    var url = (location.protocol==="https:"? "wss://": "ws://") + location.host + "/comsock";
     wss = new WebSocket(url);
 
     wss.onmessage = (message) => {
