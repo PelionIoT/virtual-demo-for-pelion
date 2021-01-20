@@ -8,23 +8,23 @@ An example demo walkthrough script is provided that gives an example of where th
 
 To use this demo you'll need to have a Pelion Device Management account, visit the [Pelion Device Management](portal.mbedcloud.com) site to sign up for an account if you don't already have one.
 
-Running the demo will register a device to your account and allow you to see and write values to and from the device from the device management service in real time via your Internet link. You can view the Pelion Device Management portal in a browser locally on the same machine that is running the demo, or you can split the demo and the browser accross real and virtual machines, run the portal on one machine and the portal on a second machine, etc.
+Running the demo will register a device to your account and allow you to see and write values to and from the device from the device management service in real time via your Internet link.
 
 ![Screenshot of demo and browser](images/BrowserScreenShot.png)
 
 ## Quick start:
-The simulator can be run as a docker container without any code changes or compilation. Docker needs to be installed on the host machine [https://www.docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop).
+The virtual demo can be run using a docker container without any code changes or compilation. Docker needs to be installed on the host machine [https://www.docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop).
 A docker image has been prepared and uploaded to the docker hub site, the commands below will pull the pelion/virtual-demo image from docker hub and run and instance on your machine
 
 1. Generate an API key from [Pelion Device management Portal](https://portal.mbedcloud.com/). You'll find the API keys in the Access Management section.
 
-2. Start the `pelion/device-simulator` container image replacing `CLOUD_SDK_API_KEY` with your key:
+2. Start the `pelion/virtual-demo` container image replacing `CLOUD_SDK_API_KEY` with your key:
 
     ```
     docker run --name pelion-demo -p 8888:8888 -e CLOUD_SDK_API_KEY=<YOUR_PELION_API_KEY> pelion/virtual-demo
     ```
     
-3. Point your web browser to [http://localhost:8888](http://localhost:8888) to access the user interface of the simulator.
+3. Point your web browser to [http://localhost:8888](http://localhost:8888) to access the user interface of the virtual device.
 
 4. Note the deviceID and find the device in your device list on the Pelion Device Management Portal. You can now browse resources and see the data updates from the virtual device in real time.
 
@@ -39,9 +39,9 @@ The docker image comes already pre-configured with the necessary tools to perfor
 
 > For more information about Pelion Device Management update, please consult our [documentation page.](https://developer.pelion.com/docs/device-management/current/updating-firmware/index.html)
 
-Let's change the firmware code running on the simulator, to simulate a code change and subsequent firmware update. Let the simulator docker container running and open a new terminal. Then:
+Let's change the firmware code running on the virtual device, to simulate a code change and subsequent firmware update. With the docker container running and open a new terminal. Then:
 
-1. Clone the simulator repository locally:
+1. Clone the virtual demo repository locally:
 
     ```
     $ git clone https://github.com/PelionIoT/virtual-demo-for-pelion.git && \
@@ -77,7 +77,7 @@ Let's change the firmware code running on the simulator, to simulate a code chan
     Save and exit.
 
 
-5.  Bootstrap a new development container of the simulator image to use it for building our new firmware. Notice that we local mount the credentials and the manifest configuration we copied in step 3 above, so that they are available from inside the new container: 
+5.  Bootstrap a new development container of the virtual demo image to use it for building our new firmware. Notice that we local mount the credentials and the manifest configuration we copied in step 3 above, so that they are available from inside the new container: 
     ```
     $ docker run -it --name pelion-demo-dev \
      -v $(pwd)/main.cpp:/build/mbed-cloud-client-example/main.cpp \
@@ -136,7 +136,7 @@ You can now choose either to perform a full firmware image update or a delta pat
     2021-01-19 13:30:00,610 INFO  Total in this campaign: 1
     ```
 
-    At the console prompt of the simulator, notice the firmware update being initiated, then downloaded and applied:
+    At the console prompt of the virtual demo, notice the firmware update being initiated, then downloaded and applied:
     ```
     [FOTA INFO] fota.c:596: Firmware update initiated.
     [FOTA DEBUG] fota.c:628: Pelion FOTA manifest is valid
@@ -280,7 +280,7 @@ You can now choose either to perform a full firmware image update or a delta pat
     2021-01-19 15:51:57,699 INFO Campaign state: publishing
     ```
 
-    At the console prompt of the simulator, notice the firmware update being initiated, then downloaded and applied:
+    At the console prompt of the virtual demo, notice the firmware update being initiated, then downloaded and applied:
     ```
     [FOTA INFO] fota.c:596: Firmware update initiated.
     [FOTA DEBUG] fota.c:628: Pelion FOTA manifest is valid
@@ -340,12 +340,12 @@ Our pre-existing docker image has a linux environment and a pre-built set of obj
 
 When you kill the demo with `CTRL-C` you are halting the docker container ´pelion-demo´ but not destroying it. When you start the demo with the supplied launch scripts you are resuming the previously halted container, this solution means that the pelion client is re-used and the same Pelion deviceID used over multiple demo sessions. If you don't use the restart command in the launch scripts and instead issue a `docker run` command then a fresh instance of the docker image will be created as a new container, which in turn means a fresh instance of the client will be executed, and a new deviceID will be issued by Pelion. This would create a growing list of stale devices in the device directory list of the Pelion portal webpage so we use the resume feature instead.
 
-## Developing with the virtual device:
-The virtual device docker image and the contents of this github repo can be used together as an environment to tweak and build your own modifications to the demo. Clone this demo to your local machine and use the following commands to mount the cloned directories inside the docker image, the result will be that any code changes you make to the repo's files on your machine can be built and executed inside the docker container.
+## Developing with the virtual demo:
+The virtual demo docker image and the contents of this github repo can be used together as an environment to tweak and build your own modifications to the demo. Clone this demo to your local machine and use the following commands to mount the cloned directories inside the docker image, the result will be that any code changes you make to the repo's files on your machine can be built and executed inside the docker container.
 
 1. Generate an API key from Pelion Device management Portal
 
-2. Start the `pelion/device-simulator` container image from the root of the cloned repo replacing `CLOUD_SDK_API_KEY` with your key:
+2. Start the `pelion/virtual-demo` container image from the root of the cloned repo replacing `CLOUD_SDK_API_KEY` with your key:
 
     ```
    docker run -it --name pelion-demo-dev -p 8888:8888 -v $(pwd):/build -e CLOUD_SDK_API_KEY=<YOUR_API_KEY> pelion/virtual-demo bash
