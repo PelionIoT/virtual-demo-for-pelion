@@ -21,6 +21,9 @@ function onLoad() {
                 break;
             case "getFW":
                 device_id = response.data;
+                if (device_id == "0.0.0") { // if we don't have a version number in the 14/ resource then show 0.0.1 instead of default 0.0.0
+                    device_id = "0.0.1"
+                }
                 $("#firmware").text(device_id);
                 break;                
             case "observe":
