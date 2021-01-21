@@ -12,6 +12,19 @@ Running the demo will register a device to your account and allow you to see and
 
 ![Screenshot of demo and browser](images/BrowserScreenShot.png)
 
+**Note** This demo is great for:
+
+* Demoing a connected device on a computer so that you can explain IoT device management without the overhead of configuring and running up physical hardware
+* Running a real Pelion Device Management demo in a video call screen share
+* Quickly and easily connecting a device so that you can experiment with the Pelion Device Management Portal in real time
+* Testing out the FOTA firmware update tools that Pelion Device Management provides
+* Connecting a device as part of your work to implement and test the REST API for Pelion Device Management. Pelion doesn't know that this is a virtual demo device
+
+The demo is *not intended* to be used as a:
+
+* Starter template for a constrained, low power IoT device. The Linux platform that we use so that we can demo the device on a computer is too heavy weight, we suggest you apply the concepts explained here to an application running on an mbed enabled board.
+* Method of running firmware update management for Linux IoT devices. The firmware update method demoed here is for single-application updates. When you're working with real Linux IoT devices you should implement update methods for Linux packages and any application libraries that you use. We suggest that you take a look at Pelion Edge if you're implementing that type of product.
+
 ## Quick start:
 The virtual demo can be run using a docker container without any code changes or compilation. Docker needs to be installed on the host machine [https://www.docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop).
 A docker image has been prepared and uploaded to the docker hub site, the commands below will pull the pelion/virtual-demo image from docker hub and run and instance on your machine
