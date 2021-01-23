@@ -48,7 +48,7 @@ docker attach pelion-demo
 ```
 
 ## Performing firmware update
-The docker image comes already pre-configured with the necessary tools to perform a firmware update. In particular, [manifest-tool](https://github.com/PelionIoT/manifest-tool) is included, to sign and produce a firmware manifest, ready to be uploaded to Pelion portal to start an update campaign. 
+The docker image comes already pre-configured with the necessary tools to perform a firmware update. In particular, In particular, build tools and the[manifest-tool](https://github.com/PelionIoT/manifest-tool) is included to sign and produce a firmware manifest ready to be uploaded to Pelion portal to start an update campaign. 
 
 > For more information about Pelion Device Management update, please consult our [documentation page.](https://developer.pelion.com/docs/device-management/current/updating-firmware/index.html)
 
@@ -66,7 +66,7 @@ Let's change the firmware code running on the virtual device, to simulate a code
     $ cd mbed-cloud-client-example
     ```
 
-3. Copy `credentials` and `manifest-tool` configuration for FOTA from the running docker container:
+3. Copy credential sources and manifest-tool configuration from the running docker container to your local folder::
 
     ```
     $ docker cp pelion-demo:/build/mbed-cloud-client-example/mbed_cloud_dev_credentials.c . && \
@@ -81,7 +81,7 @@ Let's change the firmware code running on the virtual device, to simulate a code
     $ docker cp pelion-demo:/build/mbed-cloud-client-example/__x86_x64_NativeLinux_mbedtls/Debug/mbedCloudClientExample.elf ./firmwares/current_fw.bin
 
 
-4. Use '`vi main.cpp`', then go to `line :273` and insert the following code to simulate a code change:
+4. Using `vi` editor open `main.cpp` and insert the following code to simulate a code change (insert at line :273):
     ```
     for (int i=0; i<5; i++) {
         printf("!! new firmware !! \n");
@@ -90,7 +90,7 @@ Let's change the firmware code running on the virtual device, to simulate a code
     Save and exit.
 
 
-5.  Bootstrap a new development container of the virtual demo image to use it for building our new firmware. Notice that we local mount the credentials and the manifest configuration we copied in step 3 above, so that they are available from inside the new container: 
+5.  Bootstrap a new development container of the virtual demo image to use it for building our new firmware. Notice that we local mount the credential sources and the manifest configuration we copied in step 3 above, so that they are available from inside the new container: 
     ```
     $ docker run -it --name pelion-demo-dev \
      -v $(pwd)/main.cpp:/build/mbed-cloud-client-example/main.cpp \
@@ -106,23 +106,23 @@ You can now choose either to perform a full firmware image update or a delta pat
 
 ### Full Image Update
 
-1. Switch to the firmware directory:
+1. Switch to the firmware source code directory:
     ```
     cd /build/mbed-cloud-client-example/
     ```
 
-2. Build the new firmware image:
+2. Build the new firmware image by invoking the `make` tool:
     ```
-    make -C __x86_x64_NativeLinux_mbedtls mbedCloudClientExample.elf
+    make -C __x86_x64_NativeLinux_mbedtls/ mbedCloudClientExample.elf
     ```
 
-3. Upon completion, a new firmware binary is generated:
+3. Upon completion of the build, a new firmware binary is generated:
     ```
     $ ls -l /build/mbed-cloud-client-example/__x86_x64_NativeLinux_mbedtls/Debug/mbedCloudClientExample.elf
     
     -rwxr-xr-x 1 root root 6562112 Jan 19 14:32 /build/mbed-cloud-client-example/__x86_x64_NativeLinux_mbedtls/Debug/mbedCloudClientExample.elf
     ```
-4. We now need to genarate the firmware manifest describing the update, upload it to portal to start an update campaign. The `manifest-tool` can perform all this in one step:
+4. We now need to genarate the firmware manifest describing the update, upload it to the portal and start an update campaign. The `manifest-tool` can conveniently perform all this in one step. Simple execute:
 
     ```
     $ manifest-dev-tool update -p __x86_x64_NativeLinux_mbedtls/Debug/mbedCloudClientExample.elf -w -n -v 0.2.0
