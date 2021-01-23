@@ -52,7 +52,7 @@ The docker image comes already pre-configured with the necessary tools to perfor
 
 > For more information about Pelion Device Management update, please consult our [documentation page.](https://developer.pelion.com/docs/device-management/current/updating-firmware/index.html)
 
-Let's change the firmware code running on the virtual device, to simulate a code change and subsequent firmware update. With the docker container running and open a new terminal. Then:
+Let's change the firmware code running on the virtual device, to simulate a code change and subsequent firmware update. With the docker container running, open a new terminal. Then:
 
 1. Clone the virtual demo repository locally:
 
@@ -113,7 +113,7 @@ You can now choose either to perform a full firmware image update or a delta pat
 
 2. Build the new firmware image:
     ```
-    make -C __x86_x64_NativeLinux_mbedtls/mbedCloudClientExample.elf
+    make -C __x86_x64_NativeLinux_mbedtls mbedCloudClientExample.elf
     ```
 
 3. Upon completion, a new firmware binary is generated:
