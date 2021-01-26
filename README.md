@@ -1,4 +1,6 @@
-# Virtual demo for Pelion 
+# Virtual demo for Pelion
+
+
 The virtual demo for Pelion is a software only device that connects to the Pelion Device Management service so that the service can be used and demonstrated without the requirement for any device hardware. The project was specifically created to help discussion of high level device management topics with the constraints of travel due to the Covid-19 pandemic but can be used any time that a screen share demo would be useful when a face to face physical demo isn't possible.
 
 An example demo walkthrough script is provided that gives an example of where the virtual demo can be used:
@@ -29,7 +31,7 @@ The demo is *not intended* to be used as a:
 The virtual demo can be run using a docker container without any code changes or compilation. Docker needs to be installed on the host machine [https://www.docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop).
 A docker image has been prepared and uploaded to the docker hub site, the commands below will pull the pelion/virtual-demo image from docker hub and run and instance on your machine
 
-1. Generate an API key from [Pelion Device management Portal](https://portal.mbedcloud.com/). You'll find the API keys in the Access Management section.
+1. Generate an Access key from [Pelion Device management Portal](https://portal.mbedcloud.com/). You'll find the Access keys in the Access Management section.
 
 2. Start the `pelion/virtual-demo` container image replacing `CLOUD_SDK_API_KEY` with your key:
 
@@ -349,14 +351,14 @@ The demo has been implemented to be run in 2 parts
 1) an instance of the Pelion device management client built with your certificate that writes sensor values to the linux message queue running inside the docker container
 2) a graphical representation (GUI) of a device that picks up the sensor values from the queue and displays values in a "fake device" so that conversations about managed devices can take place.
 
-Our pre-existing docker image has a linux environment and a pre-built set of objects to run the demo. When you use the `docker run` command with your API key as an argument the scripts inside the container use the API key to retrieve a device certificate from your Pelion Device Management account and finalise the compliation of the client using your certificate. The client instance is then run, a `firstrun` file is written to the root of the docker container's linux environment, and the demo is running. The client passes values to the GUI using the linux message queue running inside the container, the the GUI is rendered on port 8888 of your local machine, the vibration values can be seen under the 3313/0/5700 resource for this device listed in the Pelion device management portal.
+Our pre-existing docker image has a linux environment and a pre-built set of objects to run the demo. When you use the `docker run` command with your Access key as an argument the scripts inside the container use the Access key to retrieve a device certificate from your Pelion Device Management account and finalise the compliation of the client using your certificate. The client instance is then run, a `firstrun` file is written to the root of the docker container's linux environment, and the demo is running. The client passes values to the GUI using the linux message queue running inside the container, the the GUI is rendered on port 8888 of your local machine, the vibration values can be seen under the 3313/0/5700 resource for this device listed in the Pelion device management portal.
 
 When you kill the demo with `CTRL-C` you are halting the docker container ´pelion-demo´ but not destroying it. When you start the demo with the supplied launch scripts you are resuming the previously halted container, this solution means that the pelion client is re-used and the same Pelion deviceID used over multiple demo sessions. If you don't use the restart command in the launch scripts and instead issue a `docker run` command then a fresh instance of the docker image will be created as a new container, which in turn means a fresh instance of the client will be executed, and a new deviceID will be issued by Pelion. This would create a growing list of stale devices in the device directory list of the Pelion portal webpage so we use the resume feature instead.
 
 ## Developing with the virtual demo:
 The virtual demo docker image and the contents of this github repo can be used together as an environment to tweak and build your own modifications to the demo. Clone this demo to your local machine and use the following commands to mount the cloned directories inside the docker image, the result will be that any code changes you make to the repo's files on your machine can be built and executed inside the docker container.
 
-1. Generate an API key from Pelion Device management Portal
+1. Generate an Access key from Pelion Device management Portal
 
 2. Start the `pelion/virtual-demo` container image from the root of the cloned repo replacing `CLOUD_SDK_API_KEY` with your key:
 
