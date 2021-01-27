@@ -46,7 +46,7 @@ function onLoad() {
                         setTimeout(() => {
                             $("#console").text("Rebooting...");
                             location.reload();
-                        }, 5000)                
+                        }, 5000);                
                     }    
                 } else { // for all others, just display msg
                     $("#console").text(response.data);
@@ -84,7 +84,7 @@ function toggleShake() {
     setTimeout(() => {
         var cmd = { cmd: "shake", enable: false };
         wss.send(JSON.stringify(cmd));
-    }, 20000)
+    }, 20000);
 
 }
 
