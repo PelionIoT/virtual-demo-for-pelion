@@ -50,7 +50,7 @@ docker attach pelion-demo
 ```
 
 ## Performing firmware update
-The docker image comes already pre-configured with the necessary tools to perform a firmware update. In particular, In particular, build tools and the[manifest-tool](https://github.com/PelionIoT/manifest-tool) is included to sign and produce a firmware manifest ready to be uploaded to Pelion portal to start an update campaign. 
+The docker image comes already pre-configured with the necessary tools to perform a firmware and delta update. In particular, build tools and the suite of tools from [manifest-tool](https://github.com/PelionIoT/manifest-tool) are included to a) create a delta firmware image and b) sign and produce a firmware manifest ready to be uploaded to Pelion portal to start an update campaign. 
 
 > For more information about Pelion Device Management update, please consult our [documentation page.](https://developer.pelion.com/docs/device-management/current/updating-firmware/index.html)
 
@@ -122,40 +122,40 @@ You can now choose either to perform a full firmware image update or a delta pat
     ```
     $ ls -l /build/mbed-cloud-client-example/__x86_x64_NativeLinux_mbedtls/Debug/mbedCloudClientExample.elf
     
-    -rwxr-xr-x 1 root root 6562112 Jan 19 14:32 /build/mbed-cloud-client-example/__x86_x64_NativeLinux_mbedtls/Debug/mbedCloudClientExample.elf
+    -rwxr-xr-x 1 root root 6562160 Jan 27 11:11 mbedCloudClientExample.elf
     ```
 4. We now need to genarate the firmware manifest describing the update, upload it to the portal and start an update campaign. The `manifest-tool` can conveniently perform all this in one step. Simple execute:
 
     ```
     $ manifest-dev-tool update -p __x86_x64_NativeLinux_mbedtls/Debug/mbedCloudClientExample.elf -w -n -v 0.2.0
 
-    2021-01-19 13:29:51,924 INFO FW version: 0.2.0
-    2021-01-19 13:29:51,929 INFO Uploading FW image __x86_x64_NativeLinux_mbedtls/Debug/mbedCloudClientExample.elf
-    2021-01-19 13:29:53,529 INFO Uploaded FW image http://firmware-catalog-media-ca57.s3.dualstack.us-east-1.amazonaws.com/u7chWKTSvQdSK5PXUFyxWu
-    2021-01-19 13:29:53,531 INFO Vendor-ID: f214c5a40a7c41588f4a8f2357880e4a
-    2021-01-19 13:29:53,532 INFO Class-ID: 66eb99760e98456d8436dc223c7332ff
-    2021-01-19 13:29:53,681 INFO Created manifest in v3 schema for full update campaign
-    2021-01-19 13:29:54,225 INFO Uploaded manifest ID: 01771ad664fd0000000000010010028e
-    2021-01-19 13:29:54,636 INFO Created Campaign ID: 01771ad6669b00000000000100100323
-    2021-01-19 13:29:56,384 INFO Started Campaign ID: 01771ad6669b00000000000100100323
-    2021-01-19 13:29:56,749 INFO Campaign state: publishing
-    2021-01-19 13:29:59,846 INFO Campaign state: autostopped
-    2021-01-19 13:29:59,846 INFO Campaign is finished in state: autostopped
-    2021-01-19 13:30:00,606 INFO ----------------------------
-    2021-01-19 13:30:00,607 INFO     Campaign Summary
-    2021-01-19 13:30:00,608 INFO ----------------------------
-    2021-01-19 13:30:00,608 INFO  Successfully updated:   1
-    2021-01-19 13:30:00,609 INFO  Failed to update:       0
-    2021-01-19 13:30:00,609 INFO  Skipped:                0
-    2021-01-19 13:30:00,610 INFO  Pending:                0
-    2021-01-19 13:30:00,610 INFO  Total in this campaign: 1
+    INFO FW version: 0.2.0
+    INFO Uploading FW image __x86_x64_NativeLinux_mbedtls/Debug/mbedCloudClientExample.elf
+    INFO Uploaded FW image http://firmware-catalog-media-ca57.s3.dualstack.us-east-1.amazonaws.com/C8Kkvr7VX40kE5lMnBExia
+    INFO Vendor-ID: b7316c2bd3a74aa39feb30692acf2d63
+    INFO Class-ID: 298ac90070eb4337b6adbbf82bbe8471
+    INFO Created manifest in v3 schema for full update campaign
+    INFO Uploaded manifest ID: 0177439e95060000000000010010002d
+    INFO Created Campaign ID: 0177439e96e200000000000100100399
+    INFO Started Campaign ID: 0177439e96e200000000000100100399
+    INFO Campaign state: publishing
+    INFO Campaign state: autostopped
+    INFO Campaign is finished in state: autostopped
+    INFO ----------------------------
+    INFO     Campaign Summary
+    INFO ----------------------------
+    INFO  Successfully updated:   1
+    INFO  Failed to update:       0
+    INFO  Skipped:                0
+    INFO  Pending:                0
+    INFO  Total in this campaign: 1
     ```
 
     At the console prompt of the virtual demo, notice the firmware update being initiated, then downloaded and applied:
     ```
     [FOTA INFO] fota.c:596: Firmware update initiated.
     [FOTA DEBUG] fota.c:628: Pelion FOTA manifest is valid
-    [FOTA DEBUG] fota.c:651: get manifest : curr version 131072, new version 196608
+    [FOTA DEBUG] fota.c:651: get manifest : curr version 0, new version 131072
     [FOTA DEBUG] fota_source_profile_full.cpp:444: Reporting resource: /10252/0/2: value: 3
     [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 3 type: 0
     [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 4 type: 0
@@ -163,7 +163,7 @@ You can now choose either to perform a full firmware image update or a delta pat
     [FOTA] ---------------------------------------------------
     [FOTA] Updating component MAIN from version 0.0.0 to 0.2.0
     [FOTA] Update priority 0
-    [FOTA] Update size 6562112B
+    [FOTA] Update size 6562160B
     [FOTA] ---------------------------------------------------
     [FOTA] Download authorization granted
     [FOTA DEBUG] fota_event_handler.c:61: FOTA event-handler got event [type= 4]
@@ -215,6 +215,7 @@ You can now choose either to perform a full firmware image update or a delta pat
 
     [FOTA DEBUG] fota_source_profile_full.cpp:444: Reporting resource: /10252/0/2: value: 8
     [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 3 type: 0
+    Resource(3313/0/5700) automatically updated. Value 6
     [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 4 type: 0
     [FOTA INFO] fota.c:725: Rebooting.
     !! new firmware !!
@@ -225,29 +226,9 @@ You can now choose either to perform a full firmware image update or a delta pat
     In single-partition mode.
     Creating path ./pal
     Start Device Management Client
-    Using hardcoded Root of Trust, not suitable for production use.
-    Starting developer flow
-    Developer credentials already exist, continuing..
-    Generating random from /dev/random, this can take a long time!
-    Application ready. Build at: Jan 19 2021 11:26:14
-    Network initialized, registering...
-    [FOTA DEBUG] fota.c:371: init start
-    [FOTA DEBUG] fota_event_handler.c:61: FOTA event-handler got event [type= 1]
-    [FOTA DEBUG] fota_source_profile_full.cpp:277: Announcing FOTA state is 1
-    [FOTA INFO] fota.c:425: Registered MAIN component, version 0.3.0
-    [FOTA DEBUG] fota.c:435: After upgrade, issuing post install actions
-    [FOTA DEBUG] fota_block_device_linux.c:77: FOTA BlockDevice init file is fota_candidate
-    [FOTA DEBUG] fota.c:327: install verify component name MAIN, version 196608
-    [FOTA DEBUG] fota.c:467: init complete
-    Commander initialized and waiting for cmds...
-    Client registered
-    Endpoint Name: 01771a7172b70000000000010016f8dc
-    Device ID: 01771a7172b70000000000010016f8dc
-    [FOTA DEBUG] fota_event_handler.c:61: FOTA event-handler got event [type= 4]
-    Message status callback: (3313/0/5700) subscribed
     ```
 
-## Delta updates (TBD)
+## Delta updates
 
 
 1. Switch to the main program source directory:
@@ -262,52 +243,69 @@ You can now choose either to perform a full firmware image update or a delta pat
     ```
     $ cp __x86_x64_NativeLinux_mbedtls/Debug/mbedCloudClientExample.elf firmwares/new_fw.bin
     ```
-4. The `firmwares/` directory should now contain both the new firmware(`new_fw.bin`) and the current running one (`current_fw.bin`)following:
+4. The `firmwares/` directory should now contain both the new firmware(`new_fw.bin`) and the current running one(`current_fw.bin`):
     ```
     $  ls -l firmwares/
     
     total 12824
-    -rwxr-xr-x 1 1000 1000 6562072 Jan 19 15:29 current_fw.bin
-    -rwxr-xr-x 1 root root 6562112 Jan 19 15:51 new_fw.bin
+    -rwxr-xr-x 1 1000 1000 6562120 Jan 27 10:30 current_fw.bin
+    -rwxr-xr-x 1 root root 6562160 Jan 27 10:43 new_fw.bin
     ```
-5. We are now ready to generate the delta firmware using the `manifest-delta-tool`:
+5. We are now ready to generate a delta firmware using the `manifest-delta-tool`:
     ```
     $ manifest-delta-tool -c firmwares/current_fw.bin -n firmwares/new_fw.bin -o firmwares/delta-patch.bin
 
-    2021-01-19 13:36:30,437 INFO Current tool version PELION/BSDIFF001
-    Wrote diff file firmwares/delta-patch.bin, size 166735. Max undeCompressBuffer frame size was 512, max deCompressBuffer frame size was 40.
-    root@323939aac5da:/build/mbed-cloud-client
+    2021-01-27 10:44:30,382 INFO Current tool version PELION/BSDIFF001
+    Wrote diff file firmwares/delta-patch.bin, size 353657. Max undeCompressBuffer frame size was 512, max deCompressBuffer frame size was 222.
     ```
     
+    If we list the directory contents, we can verify the producing of the `delta-patch.bin` firmware. Notice the significant shrinkage in size, from 6.3MB of a full firmware image down to a delta of 346K!
+
+    ```
+    ls -l firmwares/delta-patch.bin
+
+    -rw-r--r-- 1 root root  353657 Jan 27 10:44 delta-patch.bin
+    ```
+
 6. Start the update campaign
     ```
-    $ manifest-dev-tool update -p firmwares/delta-patch.bin -w -n -v 0.3.0
+    $ manifest-dev-tool update -p firmwares/delta-patch.bin -w -n -v 0.2.0
 
-    2021-01-19 15:51:53,622 INFO FW version: 0.3.0
-    2021-01-19 15:51:53,624 INFO Uploading FW image firmwares/delta-patch.bin
-    2021-01-19 15:51:54,571 INFO Uploaded FW image http://firmware-catalog-media-ca57.s3.dualstack.us-east-1.amazonaws.com/53ig3icEBJEa1QSXHiqG1n
-    2021-01-19 15:51:54,572 INFO Vendor-ID: eb91fb344d3246359a56f6ae958a6b3e
-    2021-01-19 15:51:54,572 INFO Class-ID: 0f2826c9586a4ea199400a34e1afc258
-    2021-01-19 15:51:54,660 INFO Created manifest in v3 schema for delta update campaign
-    2021-01-19 15:51:55,119 INFO Uploaded manifest ID: 01771b5869b80000000000010010035b
-    2021-01-19 15:51:55,576 INFO Created Campaign ID: 01771b586b840000000000010010036d
-    2021-01-19 15:51:57,335 INFO Started Campaign ID: 01771b586b840000000000010010036d
-    2021-01-19 15:51:57,699 INFO Campaign state: publishing
+    INFO FW version: 0.2.0
+    INFO Uploading FW image firmwares/delta-patch.bin
+    INFO Uploaded FW image http://firmware-catalog-media-ca57.s3.dualstack.us-east-1.amazonaws.com/UttMp3crVuNntkxuNobTZI
+    INFO Vendor-ID: d3b2b23d842441739c666ee5cf74e594
+    INFO Class-ID: 90f4bdec6c0e483c8ecec3fbec8ba4fc
+    INFO Created manifest in v3 schema for delta update campaign
+    INFO Uploaded manifest ID: 017743762a0400000000000100100006
+    INFO Created Campaign ID: 017743762bb800000000000100100387
+    INFO Started Campaign ID: 017743762bb800000000000100100387
+    INFO Campaign state: publishing
+    INFO Campaign state: autostopped
+    INFO Campaign is finished in state: autostopped
+    INFO ----------------------------
+    INFO     Campaign Summary 
+    INFO ----------------------------
+    INFO  Successfully updated:   1
+    INFO  Failed to update:       0
+    INFO  Skipped:                0
+    INFO  Pending:                0
+    INFO  Total in this campaign: 1
     ```
 
-    At the console prompt of the virtual demo, notice the firmware update being initiated, then downloaded and applied:
+    At the console prompt of the virtual demo, notice that the device logs the downloading of the new firmware, the verification of the manifest and the successfull delta update:
     ```
     [FOTA INFO] fota.c:596: Firmware update initiated.
     [FOTA DEBUG] fota.c:628: Pelion FOTA manifest is valid
-    [FOTA DEBUG] fota.c:651: get manifest : curr version 0, new version 196608
+    [FOTA DEBUG] fota.c:651: get manifest : curr version 0, new version 131072 
     [FOTA DEBUG] fota_source_profile_full.cpp:444: Reporting resource: /10252/0/2: value: 3
     [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 3 type: 0
     [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 4 type: 0
     [FOTA DEBUG] fota.c:555: Download Authorization requested
     [FOTA] ---------------------------------------------------
-    [FOTA] Updating component MAIN from version 0.0.0 to 0.3.0
+    [FOTA] Updating component MAIN from version 0.0.0 to 0.2.0
     [FOTA] Update priority 0
-    [FOTA] Delta update. Patch size 358023B full image size 6562112B
+    [FOTA] Delta update. Patch size 353657B full image size 6562160B
     [FOTA] ---------------------------------------------------
     [FOTA] Download authorization granted
     [FOTA DEBUG] fota_event_handler.c:61: FOTA event-handler got event [type= 4]
@@ -321,29 +319,55 @@ You can now choose either to perform a full firmware image update or a delta pat
     [FOTA DEBUG] fota_source_profile_full.cpp:444: Reporting resource: /10252/0/2: value: 4
     [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 3 type: 0
     [FOTA] Downloading firmware. 3%
-    [FOTA] Downloading firmware. 5%
+    [FOTA] Downloading firmware. 9%
     [FOTA] Downloading firmware. 11%
-    [FOTA] Downloading firmware. 19%
-    [FOTA] Downloading firmware. 23%
+    [FOTA] Downloading firmware. 17%
+    [FOTA] Downloading firmware. 22%
     [FOTA] Downloading firmware. 27%
-    [FOTA] Downloading firmware. 32%
-    [FOTA] Downloading firmware. 36%
+    [FOTA] Downloading firmware. 31%
+    [FOTA] Downloading firmware. 35%
     [FOTA] Downloading firmware. 40%
     [FOTA] Downloading firmware. 45%
     [FOTA] Downloading firmware. 54%
-    [FOTA] Downloading firmware. 59%
+    [FOTA] Downloading firmware. 58%
     [FOTA] Downloading firmware. 63%
     [FOTA] Downloading firmware. 68%
     [FOTA] Downloading firmware. 72%
     [FOTA] Downloading firmware. 77%
-    [FOTA] Downloading firmware. 81%
+    [FOTA] Downloading firmware. 82%
     [FOTA] Downloading firmware. 86%
     [FOTA] Downloading firmware. 91%
-    [FOTA] Downloading firmware. 95%
+    [FOTA] Downloading firmware. 96%
     [FOTA] Downloading firmware. 100%
-    [FOTA ERROR] fota.c:158: Update aborted: (ret code -42) Failed on fragment event
-    [FOTA DEBUG] fota_source_profile_full.cpp:444: Reporting resource: /10252/0/3: value: 42
-    [FOTA DEBUG] fota_source_profile_full.cpp:444: Reporting resource: /10252/0/2: value: 1
+    [FOTA INFO] fota.c:1509: Firmware download finished
+    [FOTA DEBUG] fota_source_profile_full.cpp:444: Reporting resource: /10252/0/2: value: 6
+    [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 4 type: 0
+    [FOTA DEBUG] fota.c:1460: Install Authorization requested
+    [FOTA] Install authorization granted
+    [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 3 type: 0
+    [FOTA DEBUG] fota_event_handler.c:61: FOTA event-handler got event [type= 4]
+    [FOTA INFO] fota.c:1346: Install authorization granted.
+    [FOTA DEBUG] fota_source_profile_full.cpp:444: Reporting resource: /10252/0/2: value: 7
+    [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 4 type: 0
+    [FOTA INFO] fota.c:804: Installing new version for component MAIN
+    [FOTA INFO] fota_candidate.c:224: Found an encrypted image at address 0x0
+    [FOTA INFO] fota_candidate.c:416: Validating image...
+    [FOTA INFO] fota_candidate.c:461: Image is valid.
+    [FOTA INFO] fota_component.c:189: Installing MAIN component
+    [FOTA] Successfully installed MAIN component
+
+    [FOTA DEBUG] fota_source_profile_full.cpp:444: Reporting resource: /10252/0/2: value: 8
+    [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 3 type: 0
+    [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 4 type: 0
+    [FOTA INFO] fota.c:725: Rebooting.
+    !! new firmware !! 
+    !! new firmware !! 
+    !! new firmware !! 
+    !! new firmware !! 
+    !! new firmware !! 
+    In single-partition mode.
+    Creating path ./pal
+    Start Device Management Client
     ```
 
 ## Technical overview
