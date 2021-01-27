@@ -33,7 +33,8 @@ WORKDIR /build/mbed-cloud-client-example
 
 # deploy mbed lib deps.
 RUN mbed config root . \
- && mbed deploy
+ && mbed deploy \
+ && cp ./patch/bspatch.c ./mbed-cloud-client/update-client-hub/delta-tool-internal/source/
 
 # initialize cmake and & build demo
 RUN python3 pal-platform/pal-platform.py deploy --target=x86_x64_NativeLinux_mbedtls generate
