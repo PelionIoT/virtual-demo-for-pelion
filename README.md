@@ -83,19 +83,19 @@ Let's change the firmware code running on the virtual device, to simulate a code
     $ docker cp pelion-demo:/build/mbed-cloud-client-example/__x86_x64_NativeLinux_mbedtls/Debug/mbedCloudClientExample.elf ./firmwares/current_fw.bin
 
 
-4. Using `vi` editor open `main.cpp` and insert the following code to simulate a code change (insert at line :273):
+4. Let's alter the emitted simulated vibration value sent by the virtual demo to be multipled by 1000. Using `vi` editor, open `source/blinky.cpp` and change the line to the following (line :295):
+
     ```
-    for (int i=0; i<5; i++) {
-        printf("!! new firmware !! \n");
-    }
+    _sensed_count = randomvib * 1000;
     ```
+
     Save and exit.
 
 
 5.  Bootstrap a new development container of the virtual demo image to use it for building our new firmware. Notice that we local mount the credential sources and the manifest configuration we copied in step 3 above, so that they are available from inside the new container: 
     ```
     $ docker run -it --name pelion-demo-dev \
-     -v $(pwd)/main.cpp:/build/mbed-cloud-client-example/main.cpp \
+     -v $(pwd)/source/blinky.cpp:/build/mbed-cloud-client-example/source/blinky.cpp \
      -v $(pwd)/mbed_cloud_dev_credentials.c:/build/mbed-cloud-client-example/mbed_cloud_dev_credentials.c \
      -v $(pwd)/update_default_resources.c:/build/mbed-cloud-client-example/update_default_resources.c \
      -v $(pwd)/.manifest-dev-tool/:/build/mbed-cloud-client-example/.manifest-dev-tool/ \
@@ -106,7 +106,7 @@ Let's change the firmware code running on the virtual device, to simulate a code
 
 You can now choose either to perform a full firmware image update or a delta patch. Follow the appropriate section below.
 
-### Full Image Update
+### Option 1 - Full Image Update
 
 1. Switch to the firmware source code directory:
     ```
@@ -122,7 +122,7 @@ You can now choose either to perform a full firmware image update or a delta pat
     ```
     $ ls -l /build/mbed-cloud-client-example/__x86_x64_NativeLinux_mbedtls/Debug/mbedCloudClientExample.elf
     
-    -rwxr-xr-x 1 root root 6562160 Jan 27 11:11 mbedCloudClientExample.elf
+    -rwxr-xr-x 1 root root 6562120 Jan 27 11:11 mbedCloudClientExample.elf
     ```
 4. We now need to genarate the firmware manifest describing the update, upload it to the portal and start an update campaign. The `manifest-tool` can conveniently perform all this in one step. Simple execute:
 
@@ -163,7 +163,7 @@ You can now choose either to perform a full firmware image update or a delta pat
     [FOTA] ---------------------------------------------------
     [FOTA] Updating component MAIN from version 0.0.0 to 0.2.0
     [FOTA] Update priority 0
-    [FOTA] Update size 6562160B
+    [FOTA] Update size 6562120B
     [FOTA] ---------------------------------------------------
     [FOTA] Download authorization granted
     [FOTA DEBUG] fota_event_handler.c:61: FOTA event-handler got event [type= 4]
@@ -218,17 +218,12 @@ You can now choose either to perform a full firmware image update or a delta pat
     Resource(3313/0/5700) automatically updated. Value 6
     [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 4 type: 0
     [FOTA INFO] fota.c:725: Rebooting.
-    !! new firmware !!
-    !! new firmware !!
-    !! new firmware !!
-    !! new firmware !!
-    !! new firmware !!
     In single-partition mode.
     Creating path ./pal
     Start Device Management Client
     ```
 
-## Delta updates
+## Option 2 - Delta updates
 
 
 1. Switch to the main program source directory:
@@ -249,22 +244,22 @@ You can now choose either to perform a full firmware image update or a delta pat
     
     total 12824
     -rwxr-xr-x 1 1000 1000 6562120 Jan 27 10:30 current_fw.bin
-    -rwxr-xr-x 1 root root 6562160 Jan 27 10:43 new_fw.bin
+    -rwxr-xr-x 1 root root 6562120 Jan 27 10:43 new_fw.bin
     ```
 5. We are now ready to generate a delta firmware using the `manifest-delta-tool`:
     ```
     $ manifest-delta-tool -c firmwares/current_fw.bin -n firmwares/new_fw.bin -o firmwares/delta-patch.bin
 
     2021-01-27 10:44:30,382 INFO Current tool version PELION/BSDIFF001
-    Wrote diff file firmwares/delta-patch.bin, size 353657. Max undeCompressBuffer frame size was 512, max deCompressBuffer frame size was 222.
+    Wrote diff file firmwares/delta-patch.bin, size 245215. Max undeCompressBuffer frame size was 512, max deCompressBuffer frame size was 189.
     ```
     
-    If we list the directory contents, we can verify the producing of the `delta-patch.bin` firmware. Notice the significant shrinkage in size, from 6.3MB of a full firmware image down to a delta of 346K!
+    If we list the directory contents, we can verify the producing of the `delta-patch.bin` firmware. Notice the significant shrinkage in size, from 6.3MB of a full firmware image, down to a delta of 240K!
 
     ```
     ls -l firmwares/delta-patch.bin
 
-    -rw-r--r-- 1 root root  353657 Jan 27 10:44 delta-patch.bin
+    -rw-r--r-- 1 root root  245215 Jan 27 10:44 delta-patch.bin
     ```
 
 6. Start the update campaign
@@ -305,7 +300,7 @@ You can now choose either to perform a full firmware image update or a delta pat
     [FOTA] ---------------------------------------------------
     [FOTA] Updating component MAIN from version 0.0.0 to 0.2.0
     [FOTA] Update priority 0
-    [FOTA] Delta update. Patch size 353657B full image size 6562160B
+    [FOTA] Delta update. Patch size 245215B full image size 6562120B
     [FOTA] ---------------------------------------------------
     [FOTA] Download authorization granted
     [FOTA DEBUG] fota_event_handler.c:61: FOTA event-handler got event [type= 4]
@@ -360,15 +355,25 @@ You can now choose either to perform a full firmware image update or a delta pat
     [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 3 type: 0
     [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 4 type: 0
     [FOTA INFO] fota.c:725: Rebooting.
-    !! new firmware !! 
-    !! new firmware !! 
-    !! new firmware !! 
-    !! new firmware !! 
-    !! new firmware !! 
     In single-partition mode.
     Creating path ./pal
     Start Device Management Client
     ```
+
+## Verifying Firmware Update
+
+Once the firmware update is completed, the Pelion update campaign dashboard should display the successfully completion:
+
+![Campaign Dashboard](images/portal-campaign-dashboard.png)
+
+and the device should display the new firmware version (0.2.0 in our case):
+
+![Firmware Version](images/device-fw-version.png)
+
+Notice now that the vibration sensor values sent by the device are indeed multipled by 1000 marking the successfull firmware update!
+
+**Congratulations !**
+
 
 ## Technical overview
 The demo has been implemented to be run in 2 parts
