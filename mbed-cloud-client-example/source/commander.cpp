@@ -115,7 +115,7 @@ void Commander::listen() {
         std::string sens_type;
         // get the sensor type return string from blinky
         sens_type = _blinky.sensor_type();    
-        sendMsg("SensorType", NULL, sens_type.c_str());
+        sendMsg("sensorType", NULL, sens_type.c_str());
 
       } else if (cmd == "shake") {
         _blinky.shake(json_msg["enable"]);
