@@ -270,7 +270,6 @@ void main_application(void)
     // not produce enough output to fill the buffer
     setlinebuf(stdout);
 #endif
-
     // Initialize trace-library first
     if (application_init_mbed_trace() != 0) {
         printf("Failed initializing mbed trace\r\n");
@@ -362,8 +361,8 @@ void main_application(void)
 #ifndef MCC_MEMORY
     // sensor to configure
     std::string sensor_type = get_env("SENSOR", /*default*/ "vibration");
-    if (sensor_type != "vibration" && sensor_type != "temperature") {
-        printf("unknown sensor type configured, please use either 'vibration' or 'temperature'\n");
+    if (sensor_type != "vibration" && sensor_type != "temperature" && sensor_type != "counter") {
+        printf("unknown sensor type configured, please use either 'vibration' or 'temperature' or 'counter'\n");
         exit(1);
     }
     // update interval
@@ -379,6 +378,10 @@ void main_application(void)
         sensed_res->set_value(0);
     } else if (sensor_type == "temperature") {
         sensed_res = mbedClient.add_cloud_resource(3303, 0, 5700, "temperature_resource", M2MResourceInstance::INTEGER,
+                        M2MBase::GET_PUT_ALLOWED, 0, true, (void*)counter_updated, (void*)notification_status_callback);
+        sensed_res->set_value(0);
+    } else if (sensor_type == "counter") {
+        sensed_res = mbedClient.add_cloud_resource(3200, 0, 5501, "counter_resource", M2MResourceInstance::INTEGER,
                         M2MBase::GET_PUT_ALLOWED, 0, true, (void*)counter_updated, (void*)notification_status_callback);
         sensed_res->set_value(0);
     }
@@ -430,7 +433,7 @@ void main_application(void)
 
 #ifndef MBED_CLOUD_CLIENT_SUPPORT_MULTICAST_UPDATE
 #ifndef MCC_MEMORY
-    blinky.init(mbedClient, commander, sensed_res, std::stol(sensor_update_interval_s));
+    blinky.init(mbedClient, commander, sensed_res, std::stol(sensor_update_interval_s), sensor_type);
     blinky.request_next_loop_event();
     blinky.request_automatic_increment_event();
 #endif

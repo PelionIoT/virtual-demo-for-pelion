@@ -91,7 +91,7 @@ void Blinky::create_tasklet()
 }
 
 // use references to encourage caller to pass this existing object
-void Blinky::init(SimpleM2MClient &client, Commander *commander, M2MResource *resource, long sensor_update_interval_s)
+void Blinky::init(SimpleM2MClient &client, Commander *commander, M2MResource *resource, long sensor_update_interval_s, std::string sensor_type)
 {
     // Do not start if resource has not been allocated.
     if (!resource) {
@@ -100,6 +100,7 @@ void Blinky::init(SimpleM2MClient &client, Commander *commander, M2MResource *re
 
     _client = &client;
     _commander = commander;
+    _sensor_type = sensor_type;
     _sensed_res = resource;
     _sensor_update_interval_s = sensor_update_interval_s;
     // create the tasklet, if not done already
@@ -259,7 +260,7 @@ void Blinky::handle_buttons()
     request_next_loop_event();
 
     if (_client->is_client_registered()) {
-        if (mcc_platform_button_clicked()) {
+        if ((_sensor_type == "counter") && _shake) {
 #ifdef MBED_CLOUD_CLIENT_TRANSPORT_MODE_UDP_QUEUE
         if(_client->is_client_paused()) {
             printf("Calling Pelion Client resumed()\r\n");
@@ -268,13 +269,19 @@ void Blinky::handle_buttons()
 #endif
             _sensed_count = _sensed_res->get_value_int() + 1;
             _sensed_res->set_value(_sensed_count);
+            _commander->sendMsg("observe", _sensed_res->uri_path(), std::to_string(_sensed_count).c_str());
             printf("Button resource manually updated. Value %d\r\n", _sensed_count);
         }
     }
 }
 
-void Blinky::shake(bool enable) {
+void Blinky::shake(bool enable) 
+{
     _shake = enable;
+}
+std::string Blinky::sensor_type()
+{
+    return _sensor_type;
 }
 
 void Blinky::handle_automatic_increment()
@@ -284,7 +291,6 @@ void Blinky::handle_automatic_increment()
 
     // this might be stopped now, but the loop should then be restarted after re-registration
     request_automatic_increment_event();
-    int randomvib = _shake? abs(rand() % 10)+20: abs(rand() % 10);
     if (_client->is_client_registered()) {
 #ifdef MBED_CLOUD_CLIENT_TRANSPORT_MODE_UDP_QUEUE
         if(_client->is_client_paused()) {
@@ -292,7 +298,13 @@ void Blinky::handle_automatic_increment()
             _client->client_resumed();
         }
 #endif
- 		_sensed_count = randomvib;
+        if (_sensor_type == "vibration") {
+            _sensed_count = _shake? abs(rand() % 10)+20: abs(rand() % 10);
+        }
+        else if (_sensor_type == "counter") {
+            _sensed_count = _sensed_res->get_value_int() + 1; 
+        }
+
         _sensed_res->set_value(_sensed_count);
         _commander->sendMsg("observe", _sensed_res->uri_path(), std::to_string(_sensed_count).c_str());
 
