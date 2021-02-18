@@ -151,9 +151,9 @@ def _main():
     # check if SENSOR env is configured
     if "SENSOR" in os.environ:
         sensor_type = os.environ['SENSOR']
-        if sensor_type != "vibration" and sensor_type != "temperature":
+        if sensor_type != "vibration" and sensor_type != "temperature" and sensor_type != "counter":
             logging.error(
-                "unknown sensor type configured, please use either 'vibration' or 'temperature'\n"
+                "unknown sensor type configured, please use either 'vibration' or 'temperature' or 'counter'\n"
             )
             exit(1)
 
