@@ -55,9 +55,17 @@ function onLoad() {
                 break;
             case "sensorType":
                 sensor_type = response.data;
+                if (sensor_type === "counter")
+                {
+                    $("#shakeButtonId").text("+1");
+                } else if (sensor_type === "vibration"){
+                    $("#shakeButtonId").text("SHAKE");
+                } 
+                // else the default "BUTTON" label will be used from the static index.html file
+                
                 break;
             default:
-                console.log("received unknown paylod: " + message.data);
+                console.log("received unknown payload: " + message.data);
         }
     }
 
