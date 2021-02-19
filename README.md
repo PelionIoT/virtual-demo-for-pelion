@@ -5,26 +5,26 @@
 
 ## Introduction
 
-The virtual demo for Pelion is a software only device that connects to the Pelion Device Management service so that the service can be used and demonstrated without the requirement for any device hardware. The project was specifically created to help discussion of high level device management topics with the constraints of travel due to the Covid-19 pandemic but can be used any time that a screen share demo would be useful when a face to face physical demo isn't possible.
+The virtual demo for Pelion is a software only device that connects to the Pelion Device Management service so that the service can be used and demonstrated without the requirement for any device hardware. The project was specifically created to help discussion of high-level device management topics with the constraints of travel due to the Covid-19 pandemic but can be used any time that a screen share demo would be useful when a face to face physical demo isn't possible.
 
 An example demo walkthrough script is provided that gives an example of where the virtual demo can be used:
 [Pelion-virtual-demo-script.md](Pelion-virtual-demo-script.md)
 
 To use this demo you'll need to have a Pelion Device Management account, visit the [Pelion Device Management](portal.mbedcloud.com) site to sign up for an account if you don't already have one.
 
-Running the demo will register a device to your account and allow you to see and write values to and from the device from the device management service in real time via your Internet link.
+Running the demo will register a device to your account and allow you to see and write values to and from the device management service in real-time via your Internet link.
 
 **Note** This demo is great for:
 
 * Demoing a connected device on a computer so that you can explain IoT device management without the overhead of configuring and running up physical hardware
 * Running a real Pelion Device Management demo in a video call screen share
-* Quickly and easily connecting a device so that you can experiment with the Pelion Device Management Portal in real time
+* Quickly and easily connecting a device so that you can experiment with the Pelion Device Management Portal in real-time
 * Testing out the FOTA firmware update tools that Pelion Device Management provides
 * Connecting a device as part of your work to implement and test the REST API for Pelion Device Management. Pelion doesn't know that this is a virtual demo device
 
 The demo is *not intended* to be used as a:
 
-* Starter template for a constrained, low power IoT device. The Linux platform that we use to be able to demo the device on a computer is too heavy weight for a constrained hardware device. We suggest you apply the concepts explained here to an application running on an mbed enabled board.
+* Starter template for a constrained, low power IoT device. The Linux platform that we use to be able to demo the device on a computer is too heavyweight for a constrained hardware device. We suggest you apply the concepts explained here to an application running on an mbed enabled board.
 * Method of running firmware update management for Linux IoT devices. The firmware update method demoed here is for single-application updates. When you're working with real Linux IoT devices you should implement update methods for Linux packages and any application libraries that you use. We suggest that you take a look at Pelion Edge if you're implementing that type of product.
 
 ## Updates
@@ -33,10 +33,10 @@ The demo is *not intended* to be used as a:
 	* Firmware update added including delta update generation
 	* Multi-sensor type support. Inclusion of an option to build a counter-type device with the same functionality as mbed cloud client example
 
-## Quick start:
+## Quickstart:
 The virtual demo can be run using a docker container without any code changes. You can run the environment locally on your machine or you can use our walkthrough on [Katakoda](https://www.katacoda.com/cvasilak/scenarios/pelion-device-simulator). 
 
-If you're running the demo locally then docker needs to be installed on your host machine [https://www.docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop). A docker image has been prepared and uploaded to the docker hub site, the commands below will pull the pelion/virtual-demo image from docker hub and run and instance on your machine
+If you're running the demo locally then docker needs to be installed on your host machine [https://www.docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop). A docker image has been prepared and uploaded to the docker hub site, the commands below will pull the pelion/virtual-demo image from docker hub and run an instance on your machine
 
 1. Generate an Access key from [Pelion Device management Portal](https://portal.mbedcloud.com/). You'll find the Access keys in the Access Management section.
 
@@ -48,7 +48,7 @@ If you're running the demo locally then docker needs to be installed on your hos
     
 3. Point your web browser to [http://localhost:8888](http://localhost:8888) to access the user interface of the virtual device.
 
-4. Note the deviceID and find the device in your device list on the Pelion Device Management Portal. You can now browse resources and see the data updates from the virtual device in real time.
+4. Note the deviceID and find the device in your device list on the Pelion Device Management Portal. You can now browse resources and see the data updates from the virtual device in real-time.
 
 Kill the demo with CTRL-C. The docker container running this instance of the demo will be suspended. You can choose to come back to this same container and resume it at a later date (the deviceID will be preserved), or you can issue a fresh `docker run` command to create a new device instance and a new device in your device directory.
 ```
@@ -96,16 +96,16 @@ Let's change the firmware code running on the virtual device, to simulate a code
     $ docker cp pelion-demo:/build/mbed-cloud-client-example/__x86_x64_NativeLinux_mbedtls/Debug/mbedCloudClientExample.elf ./firmwares/current_fw.bin
 
 
-4. Let's alter the emitted simulated vibration value sent by the virtual demo to be multiplied by 1000. Using `vi` editor, open `source/blinky.cpp` and change the line to the following (line :295):
+4. Let's alter the emitted simulated vibration value sent by the virtual demo to be multiplied by 1000. Using `vi` editor, open `source/blinky.cpp`, navigate to line `:307` and add the following line:
 
     ```
-    _sensed_count = randomvib * 1000;
+    _sensed_count = _sensed_count * 1000;
     ```
 
     Save and exit.
 
 
-5.  Bootstrap a new development container of the virtual demo image to use it for building our new firmware. Notice that we local mount the credential sources and the manifest configuration we copied in step 3 above, so that they are available from inside the new container: 
+5.  Bootstrap a new development container of the virtual demo image to use it for building our new firmware. Notice that we local mount the credential sources and the manifest configuration we copied in step 3 above so that they are available from inside the new container: 
     ```
     $ docker run -it --name pelion-demo-dev \
      -v $(pwd)/source/blinky.cpp:/build/mbed-cloud-client-example/source/blinky.cpp \
@@ -251,7 +251,7 @@ You can now choose either to perform a full firmware image update or a delta pat
     ```
     $ cp __x86_x64_NativeLinux_mbedtls/Debug/mbedCloudClientExample.elf firmwares/new_fw.bin
     ```
-4. The `firmwares/` directory should now contain both the new firmware(`new_fw.bin`) and the current running one(`current_fw.bin`):
+4. The `firmwares/` directory should now contain both the new firmware(`new_fw.bin`) and the currently running one(`current_fw.bin`):
     ```
     $  ls -l firmwares/
     
@@ -375,7 +375,7 @@ You can now choose either to perform a full firmware image update or a delta pat
 
 ## Verifying Firmware Update
 
-Once the firmware update is completed, the Pelion update campaign dashboard should display the successfully completion:
+Once the firmware update is completed, the Pelion update campaign dashboard should display the successful completion:
 
 ![Campaign Dashboard](images/portal-campaign-dashboard.png)
 
@@ -390,10 +390,10 @@ Notice now that the vibration sensor values sent by the device are indeed multip
 
 ## Technical overview
 The demo has been implemented to be run in 2 parts
-1) an instance of the Pelion device management client built with your certificate that writes sensor values to the linux message queue running inside the docker container
+1) an instance of the Pelion device management client built with your certificate that writes sensor values to the Linux message queue running inside the docker container
 2) a graphical representation (GUI) of a device that picks up the sensor values from the queue and displays values in a "fake device" so that conversations about managed devices can take place.
 
-Our pre-existing docker image has a linux environment and a pre-built set of objects to run the demo. When you use the `docker run` command with your Access key as an argument the scripts inside the container use the Access key to retrieve a device certificate from your Pelion Device Management account and finalise the compilation of the client using your certificate. The client instance is then run, a `firstrun` file is written to the root of the docker container's linux environment, and the demo is running. The client passes values to the GUI using the linux message queue running inside the container, the the GUI is rendered on port 8888 of your local machine, the vibration values can be seen under the 3313/0/5700 resource for this device listed in the Pelion device management portal.
+Our pre-existing docker image has a Linux environment and a pre-built set of objects to run the demo. When you use the `docker run` command with your Access key as an argument the scripts inside the container use the Access key to retrieve a device certificate from your Pelion Device Management account and finalise the compilation of the client using your certificate. The client instance is then run, a `firstrun` file is written to the root of the docker container's Linux environment and the demo starts running. The client passes values to the GUI using the message queue running inside the container, the GUI is rendered on port 8888 of your local machine, the vibration values can be seen under the 3313/0/5700 resource for this device listed in the Pelion device management portal.
 
 When you kill the demo with `CTRL-C` you are halting the docker container ´pelion-demo´ but not destroying it. When you start the demo with the supplied launch scripts you are resuming the previously halted container, this solution means that the pelion client is re-used and the same Pelion deviceID used over multiple demo sessions. If you don't use the restart command in the launch scripts and instead issue a `docker run` command then a fresh instance of the docker image will be created as a new container, which in turn means a fresh instance of the client will be executed, and a new deviceID will be issued by Pelion. This would create a growing list of stale devices in the device directory list of the Pelion portal webpage so we use the resume feature instead.
 
@@ -422,8 +422,7 @@ cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=./../p
 cd ../../sim-webapp
 ```
 
-4. To build your changes you can use the sim-webapp.py python script. The first build will require all object files to be built, this can take 30+ minutes but subsequent builds will only rebuild your modifications. At the end of each build the script adds a marker `firstrun` file to the sim-webapp directory to ensure further executions of the script only cause the demo to be executed and not compiled again. Similarly a `certexists` file in the root of the docker container ensures that the certificate for your device is only pulled once. To kick a fresh compilation of your code changes use
-
+4. To build your changes you can use the sim-webapp.py python script. The first build will require all object files to be built, this can take 30+ minutes but subsequent builds will only rebuild your modifications. At the end of each build the script adds a marker `firstrun` file to the sim-webapp directory to ensure further executions of the script only cause the demo to be executed and not compiled again. Similarly, a `certexists` file in the root of the docker container ensures that the certificate for your device is only pulled once. To kick a fresh compilation of your code changes execute the following:
 ``` 
 rm -f firstrun && python3 sim-webapp.py
 ```
