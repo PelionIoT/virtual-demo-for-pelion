@@ -26,6 +26,7 @@ class M2MResource;
 class Commander;
 
 #include <stdint.h>
+#include <string>
 
 class Blinky
 {
@@ -39,12 +40,13 @@ public:
 
     ~Blinky();
 
-    void init(SimpleM2MClient &client, Commander *commander, M2MResource *resource, long sensor_update_interval);
+    void init(SimpleM2MClient &client, Commander *commander, M2MResource *resource, long sensor_update_interval, std::string sensor_type);
 
     bool start(const char* pattern, size_t length, bool pattern_restart);
 
     void stop();
     void shake(bool enable);
+    std::string sensor_type();
 public:
     // This needs
     void event_handler(const arm_event_s &event);
@@ -72,6 +74,8 @@ private:
     SimpleM2MClient *_client;
 
     Commander *_commander;
+
+    std::string _sensor_type;
 
     M2MResource     *_sensed_res;
 

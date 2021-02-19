@@ -43,7 +43,17 @@ All of the device status and management control functionality that you can see i
 
 ### Firmware update 
 
-On the device management menu bar you can see firmware updates, access management, and team configuration. Firmware update is where you can build campaigns to roll new software out to your devices giving you all of the enterprise software update tools that you’ll want to have available when you’re managing devices at scale. All of the firmware updates are validated down at the device end both for integrity and non corruption of the update before its installed, but also for validity of the sender to ensure fake firmware updates can’t be injected or spoofed onto your devices that might create a security vulnerability.  
+On the device management menu bar you can see firmware updates, access management, and team configuration. Firmware update is where you can build campaigns to roll new software out to your devices giving you all of the enterprise software update tools that you’ll want to have available when you’re managing devices at scale. All of the firmware updates are validated down at the device end both for integrity and non corruption of the update before its installed, but also for validity of the sender to ensure fake firmware updates can’t be injected or spoofed onto your devices that might create a security vulnerability.
+
+**I can make a change to the application running on the device and use Pelion Device Management to push deliver the new application to the device and confirm that the update was applied correctly. I've got the source code for this application here on my machine, lets change the sensitivity of the values that the sensor can report. I'll make a quick change right now to multiple the regular number by 1000 and rebuild the app.** 
+
+**I've made the change to the source code but before I build the app I need to make sure that the update credentials for this build match the credentials in the application already running on the device, its these credentials that are checked by the firmware update management tools and by the device itself to protect it from attempts to run unauthorised or hacked software.** 
+
+**Lets now build the code, and we end up with a new binary. We could push this as is, or we have the option of only pushing the changes since the last software so that we keep our bandwidth use to a minimum. If we're confident that we know that all of the live devices are already running the last software then delta updates are great to optimise our data use, but sometimes you want to make sure that a full update is pushed, so we support both update methods. When I've run the delta generation tool you can see that I'm now going to be pushing an update that is only 250k instead of the full 6.5Mb binary.** 
+
+**I'll push the update ... and you can see that the image has been pushed to our servers and prepared to deliver to devices, and almost instantly you can see that the device has taken the update, validated it, applied it, rebooted, and now we're reporting vibration values in the 1000s and you can see that the new firmware version number shown on the device.** 
+
+**If we look at the Pelion Device Management portal (Firmware update -> Manifests -> <campaign-date-time>) you can see that the campaign was completed successfully. If I had multiple instances of this device running on my account then these numbers would be reflected to show the number of active, running devices that have received the update, any offline devices that are yet to receive the update, and any records of failed updates.**
 
 ### Final summary 
 

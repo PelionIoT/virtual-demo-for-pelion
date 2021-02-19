@@ -24,12 +24,19 @@ Running the demo will register a device to your account and allow you to see and
 
 The demo is *not intended* to be used as a:
 
-* Starter template for a constrained, low power IoT device. The Linux platform that we use so that we can demo the device on a computer is too heavy weight, we suggest you apply the concepts explained here to an application running on an mbed enabled board.
+* Starter template for a constrained, low power IoT device. The Linux platform that we use to be able to demo the device on a computer is too heavy weight for a constrained hardware device. We suggest you apply the concepts explained here to an application running on an mbed enabled board.
 * Method of running firmware update management for Linux IoT devices. The firmware update method demoed here is for single-application updates. When you're working with real Linux IoT devices you should implement update methods for Linux packages and any application libraries that you use. We suggest that you take a look at Pelion Edge if you're implementing that type of product.
 
+## Updates
+* V1.1 Feb 2021
+	* Mbed cloud client updated to v4.7.0
+	* Firmware update added including delta update generation
+	* Multi-sensor type support. Inclusion of an option to build a counter-type device with the same functionality as mbed cloud client example
+
 ## Quick start:
-The virtual demo can be run using a docker container without any code changes or compilation. Docker needs to be installed on the host machine [https://www.docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop).
-A docker image has been prepared and uploaded to the docker hub site, the commands below will pull the pelion/virtual-demo image from docker hub and run and instance on your machine
+The virtual demo can be run using a docker container without any code changes. You can run the environment locally on your machine or you can use our walkthrough on [Katakoda](https://www.katacoda.com/cvasilak/scenarios/pelion-device-simulator). 
+
+If you're running the demo locally then docker needs to be installed on your host machine [https://www.docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop). A docker image has been prepared and uploaded to the docker hub site, the commands below will pull the pelion/virtual-demo image from docker hub and run and instance on your machine
 
 1. Generate an Access key from [Pelion Device management Portal](https://portal.mbedcloud.com/). You'll find the Access keys in the Access Management section.
 
@@ -48,6 +55,12 @@ Kill the demo with CTRL-C. The docker container running this instance of the dem
 docker restart pelion-demo
 docker attach pelion-demo
 ```
+
+## Specifying the device type
+The default device type built by this project is a vibration sensor. If you want to build a counter device instead, useful if you're running an IoT project built around the standard mbed cloud client example code running on an mbed enabled board but you want to use a software device instead, the add `-e SENSOR=counter` to the docker run instruction.
+    ```
+    docker run --name pelion-demo -p 8888:8888 -e CLOUD_SDK_API_KEY=<YOUR_PELION_API_KEY> -e SENSOR=counter pelion/virtual-demo
+    ```
 
 ## Performing firmware update
 The docker image comes already pre-configured with the necessary tools to perform a firmware and delta update. In particular, build tools and the suite of tools from [manifest-tool](https://github.com/PelionIoT/manifest-tool) are included to a) create a delta firmware image and b) sign and produce a firmware manifest ready to be uploaded to Pelion portal to start an update campaign. 
@@ -83,7 +96,7 @@ Let's change the firmware code running on the virtual device, to simulate a code
     $ docker cp pelion-demo:/build/mbed-cloud-client-example/__x86_x64_NativeLinux_mbedtls/Debug/mbedCloudClientExample.elf ./firmwares/current_fw.bin
 
 
-4. Let's alter the emitted simulated vibration value sent by the virtual demo to be multipled by 1000. Using `vi` editor, open `source/blinky.cpp` and change the line to the following (line :295):
+4. Let's alter the emitted simulated vibration value sent by the virtual demo to be multiplied by 1000. Using `vi` editor, open `source/blinky.cpp` and change the line to the following (line :295):
 
     ```
     _sensed_count = randomvib * 1000;
@@ -124,7 +137,7 @@ You can now choose either to perform a full firmware image update or a delta pat
     
     -rwxr-xr-x 1 root root 6562120 Jan 27 11:11 mbedCloudClientExample.elf
     ```
-4. We now need to genarate the firmware manifest describing the update, upload it to the portal and start an update campaign. The `manifest-tool` can conveniently perform all this in one step. Simple execute:
+4. We now need to generate the firmware manifest describing the update, upload it to the portal and start an update campaign. The `manifest-tool` can conveniently perform all this in one step. Simple execute:
 
     ```
     $ manifest-dev-tool update -p __x86_x64_NativeLinux_mbedtls/Debug/mbedCloudClientExample.elf -w -n -v 0.2.0
@@ -230,7 +243,7 @@ You can now choose either to perform a full firmware image update or a delta pat
     ```
     $ cd /build/mbed-cloud-client-example/
     ```
-2. Assuming you've modifed `main.cpp` as suggested above, we can now proceed and produce the new firmware:
+2. Assuming you've modified `main.cpp` as suggested above, we can now proceed and produce the new firmware:
     ```
     $ make -C __x86_x64_NativeLinux_mbedtls/ mbedCloudClientExample.elf
     ```
@@ -288,7 +301,7 @@ You can now choose either to perform a full firmware image update or a delta pat
     INFO  Total in this campaign: 1
     ```
 
-    At the console prompt of the virtual demo, notice that the device logs the downloading of the new firmware, the verification of the manifest and the successfull delta update:
+    At the console prompt of the virtual demo, notice that the device logs the downloading of the new firmware, the verification of the manifest and the successful delta update:
     ```
     [FOTA INFO] fota.c:596: Firmware update initiated.
     [FOTA DEBUG] fota.c:628: Pelion FOTA manifest is valid
@@ -370,7 +383,7 @@ and the device should display the new firmware version (0.2.0 in our case):
 
 ![Firmware Version](images/device-fw-version.png)
 
-Notice now that the vibration sensor values sent by the device are indeed multipled by 1000 marking the successfull firmware update!
+Notice now that the vibration sensor values sent by the device are indeed multiplied by 1000 marking the successful firmware update!
 
 **Congratulations !**
 
@@ -380,7 +393,7 @@ The demo has been implemented to be run in 2 parts
 1) an instance of the Pelion device management client built with your certificate that writes sensor values to the linux message queue running inside the docker container
 2) a graphical representation (GUI) of a device that picks up the sensor values from the queue and displays values in a "fake device" so that conversations about managed devices can take place.
 
-Our pre-existing docker image has a linux environment and a pre-built set of objects to run the demo. When you use the `docker run` command with your Access key as an argument the scripts inside the container use the Access key to retrieve a device certificate from your Pelion Device Management account and finalise the compliation of the client using your certificate. The client instance is then run, a `firstrun` file is written to the root of the docker container's linux environment, and the demo is running. The client passes values to the GUI using the linux message queue running inside the container, the the GUI is rendered on port 8888 of your local machine, the vibration values can be seen under the 3313/0/5700 resource for this device listed in the Pelion device management portal.
+Our pre-existing docker image has a linux environment and a pre-built set of objects to run the demo. When you use the `docker run` command with your Access key as an argument the scripts inside the container use the Access key to retrieve a device certificate from your Pelion Device Management account and finalise the compilation of the client using your certificate. The client instance is then run, a `firstrun` file is written to the root of the docker container's linux environment, and the demo is running. The client passes values to the GUI using the linux message queue running inside the container, the the GUI is rendered on port 8888 of your local machine, the vibration values can be seen under the 3313/0/5700 resource for this device listed in the Pelion device management portal.
 
 When you kill the demo with `CTRL-C` you are halting the docker container ´pelion-demo´ but not destroying it. When you start the demo with the supplied launch scripts you are resuming the previously halted container, this solution means that the pelion client is re-used and the same Pelion deviceID used over multiple demo sessions. If you don't use the restart command in the launch scripts and instead issue a `docker run` command then a fresh instance of the docker image will be created as a new container, which in turn means a fresh instance of the client will be executed, and a new deviceID will be issued by Pelion. This would create a growing list of stale devices in the device directory list of the Pelion portal webpage so we use the resume feature instead.
 
@@ -389,7 +402,7 @@ The virtual demo docker image and the contents of this github repo can be used t
 
 1. Generate an Access key from Pelion Device management Portal
 
-2. Start the `pelion/virtual-demo` container image from the root of the cloned repo replacing `CLOUD_SDK_API_KEY` with your key:
+2. Start the `pelion/virtual-demo` container image from the root of the cloned repo replacing `CLOUD_SDK_API_KEY` with your key and add `-e SENSOR=counter` if you want to build a counter device instead of the default vibration sensor:
 
     ```
    docker run -it --name pelion-demo-dev -p 8888:8888 -v $(pwd):/build -e CLOUD_SDK_API_KEY=<YOUR_API_KEY> pelion/virtual-demo bash
@@ -409,7 +422,7 @@ cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=./../p
 cd ../../sim-webapp
 ```
 
-4. To build your changes you can use the sim-webapp.py python script. The first build will require all object files to be built, this can take 30+ minutes but subsequent builds will only rebuild your modifications. At the end of each build the script adds a marker `firstrun` file to the sim-webapp directory to ensure further executions of the script only cause the demo to be executed and not compiled again. Similarly a `certexists` file in the root of the docker container ensures that the certificate for your device is only pulled once. To kick a fresh compliation of your code changes use
+4. To build your changes you can use the sim-webapp.py python script. The first build will require all object files to be built, this can take 30+ minutes but subsequent builds will only rebuild your modifications. At the end of each build the script adds a marker `firstrun` file to the sim-webapp directory to ensure further executions of the script only cause the demo to be executed and not compiled again. Similarly a `certexists` file in the root of the docker container ensures that the certificate for your device is only pulled once. To kick a fresh compilation of your code changes use
 
 ``` 
 rm -f firstrun && python3 sim-webapp.py

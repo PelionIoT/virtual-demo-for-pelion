@@ -111,9 +111,14 @@ void Commander::listen() {
         fota_component_version_int_to_semver(header_info.version, semver);
         sendMsg("getFW", NULL, semver);
 
+      } else if (cmd == "getSensorType") {
+        std::string sens_type;
+        // get the sensor type return string from blinky
+        sens_type = _blinky.sensor_type();    
+        sendMsg("sensorType", NULL, sens_type.c_str());
+
       } else if (cmd == "shake") {
         _blinky.shake(json_msg["enable"]);
-
       } else {
         sendMsg("err", NULL, "unknown command");
       }

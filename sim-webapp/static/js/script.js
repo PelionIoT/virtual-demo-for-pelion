@@ -7,6 +7,7 @@ var SMALL_CONSOLE_TEXT_CSS= {'margin': '0px','color': '#bad8fc','font-family': '
 var LARGE_CONSOLE_TEXT_CSS= {'margin': '0px','color': '#bad8fc','font-family': 'Electrolize', 'font-size': '38px'};
 
 var led = false;
+var sensor_type = "vibration"; // default
 
 function onLoad() {
     var url = (location.protocol==="https:"? "wss://": "ws://") + location.host + "/comsock";
@@ -52,8 +53,19 @@ function onLoad() {
                     $("#console").text(response.data);
                 }
                 break;
+            case "sensorType":
+                sensor_type = response.data;
+                if (sensor_type === "counter")
+                {
+                    $("#shakeButtonId").text("+1");
+                } else if (sensor_type === "vibration"){
+                    $("#shakeButtonId").text("SHAKE");
+                } 
+                // else the default "BUTTON" label will be used from the static index.html file
+                
+                break;
             default:
-                console.log("received unknown paylod: " + message.data);
+                console.log("received unknown payload: " + message.data);
         }
     }
 
@@ -66,6 +78,10 @@ function onLoad() {
         // retrieve firmware version
         var cmd = { cmd: "getFW" };
         wss.send(JSON.stringify(cmd));
+
+        // retrieve sensor type
+        var cmd = { cmd: "getSensorType" };
+        wss.send(JSON.stringify(cmd));        
     }
 
     wss.onerror = (error) => {
@@ -74,17 +90,29 @@ function onLoad() {
 }
 
 function toggleShake() {
-    // toggle button animation
-    $("#shakeButtonId").toggleClass("animate__wobble");
-    setTimeout(() => $("#shakeButtonId").toggleClass("animate__wobble"), 5000);
+    if (sensor_type === "vibration") // vibration
+    {
+        // toggle button animation
+        $("#shakeButtonId").toggleClass("animate__wobble");
+        setTimeout(() => $("#shakeButtonId").toggleClass("animate__wobble"), 20000);   
 
-    //instruct server and revert after 20s
-    var cmd = { cmd: "shake", enable: true };
-    wss.send(JSON.stringify(cmd));
-    setTimeout(() => {
-        var cmd = { cmd: "shake", enable: false };
+        //instruct server that shake is enabled and revert after 20000ms
+        var cmd = { cmd: "shake", enable: true };
         wss.send(JSON.stringify(cmd));
-    }, 20000);
-
+        setTimeout(() => {
+            var cmd = { cmd: "shake", enable: false };
+            wss.send(JSON.stringify(cmd));
+        }, 20000);
+    }
+    else
+    {
+        //instruct server that button is down and revert after 100ms
+        var cmd = { cmd: "shake", enable: true };
+        wss.send(JSON.stringify(cmd));
+        setTimeout(() => {
+            var cmd = { cmd: "shake", enable: false };
+            wss.send(JSON.stringify(cmd));
+        }, 100);        
+    }
 }
 
