@@ -21,8 +21,8 @@ RUN apt-get update && apt-get -y install \
 # install mbed-cli
 RUN pip3 install mercurial requests click mbed-cli tornado posix_ipc
 
-# install latest manifest-tool (currently in RC phase and not on 'pypi' repo)
-RUN pip3 install https://github.com/PelionIoT/manifest-tool/archive/v2.1.1rc3.tar.gz
+# install latest manifest-tool
+RUN pip3 install https://github.com/PelionIoT/manifest-tool/archive/v2.1.1.tar.gz
 
 # Add pelion-client and webapp
 ADD mbed-cloud-client-example /build/mbed-cloud-client-example
