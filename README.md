@@ -46,6 +46,8 @@ If you're running the demo locally then docker needs to be installed on your hos
     docker run --name pelion-demo -p 8888:8888 -e CLOUD_SDK_API_KEY=<YOUR_PELION_API_KEY> pelion/virtual-demo
     ```
     
+    > Note: You can also specify the default Pelion Cloud address to use using `CLOUD_URL` environment variable, if omitted the default '`api.us-east-1.mbedcloud.com`' production address is used.
+
 3. Point your web browser to [http://localhost:8888](http://localhost:8888) to access the user interface of the virtual device.
 
 4. Note the deviceID and find the device in your device list on the Pelion Device Management Portal. You can now browse resources and see the data updates from the virtual device in real-time.

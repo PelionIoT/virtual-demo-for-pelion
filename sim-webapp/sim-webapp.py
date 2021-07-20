@@ -36,7 +36,6 @@ from tornado.options import define, options
 define("port", default=8888, help="run on the given port", type=int)
 
 config = {}
-sensor_type = "vibration"  # default to vibration
 
 MQUEUE_CMD = "/mqueue-cmd"
 MQUEUE_RESP = "/mqueue-resp"
@@ -82,7 +81,7 @@ class MqueuHandler():
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
-        self.render("index.html", sensor_type=os.getenv('SENSOR', 'vibration'))
+        self.render("index.html", config['sensor_type'])
 
 
 class ComSocketHandler(tornado.websocket.WebSocketHandler):
@@ -118,17 +117,20 @@ class ComSocketHandler(tornado.websocket.WebSocketHandler):
         qd_cmd.send(cmd)
         # logging.info("sent (qd_cmd) msg: '%s'", cmd)
 
+
 def gencerts():
     # invoke Pelion 'dev_init.py' to create certs
     subprocess.Popen(['./dev_init.py', 'with-credentials', '-a', config["api_key"],
-                    '-u', 'https://api.us-east-1.mbedcloud.com'],
-                    cwd='/build/mbed-cloud-client-example/utils').wait()
+                      '-u', config['cloud_url']],
+                     cwd='/build/mbed-cloud-client-example/utils').wait()
+
 
 def build():
     # delete the last instance of the app so that we don't automatically
     # execute the old app if the new build fails
     with contextlib.suppress(FileNotFoundError):
-        os.remove('/build/mbed-cloud-client-example/__x86_x64_NativeLinux_mbedtls/Debug/mbedCloudClientExample.elf')
+        os.remove(
+            '/build/mbed-cloud-client-example/__x86_x64_NativeLinux_mbedtls/Debug/mbedCloudClientExample.elf')
 
     # spawn process to build pelion-client
     subprocess.Popen(['make', 'mbedCloudClientExample.elf'],
@@ -148,14 +150,16 @@ def _main():
         )
         exit(1)
 
+    # check if CLOUD_URL env is configured (default to prod.)
+    config['cloud_url'] = os.getenv('CLOUD_URL', 'https://api.us-east-1.mbedcloud.com')
+
     # check if SENSOR env is configured
-    if "SENSOR" in os.environ:
-        sensor_type = os.environ['SENSOR']
-        if sensor_type != "vibration" and sensor_type != "temperature" and sensor_type != "counter":
-            logging.error(
-                "unknown sensor type configured, please use either 'vibration' or 'temperature' or 'counter'\n"
-            )
-            exit(1)
+    config['sensor_type'] = os.getenv('SENSOR', 'vibration')
+    if config['sensor_type'] != "vibration" and config['sensor_type'] != "temperature" and config['sensor_type'] != "counter":
+        logging.error(
+            "unknown sensor type configured, please use either 'vibration', 'temperature' or 'counter'\n"
+        )
+        exit(1)
 
     # check if we need to generate certs
     if not os.path.isfile('certexists'):
