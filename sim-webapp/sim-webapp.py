@@ -81,7 +81,7 @@ class MqueuHandler():
 
 class MainHandler(tornado.web.RequestHandler):
     def get(self):
-        self.render("index.html", config['sensor_type'])
+        self.render("index.html", sensor_type=config['sensor_type'])
 
 
 class ComSocketHandler(tornado.websocket.WebSocketHandler):
