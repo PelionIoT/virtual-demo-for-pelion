@@ -58,11 +58,12 @@ docker restart pelion-demo
 docker attach pelion-demo
 ```
 
-## Specifying the device type
-The default device type built by this project is a vibration sensor. If you want to build a counter device instead, useful if you're running an IoT project built around the standard mbed cloud client example code running on an mbed enabled board but you want to use a software device instead, the add `-e SENSOR=counter` to the docker run instruction.
-    ```
-    docker run --name pelion-demo -p 8888:8888 -e CLOUD_SDK_API_KEY=<YOUR_PELION_API_KEY> -e SENSOR=counter pelion/virtual-demo
-    ```
+## Specifying the device type and sensor update interval
+The default device type simulated when running the virtual-demo is a vibration sensor(_/3313/0/5700_). If you want to build a counter device(_/3200/0/5501_) or temperature(_/3303/0/5700_), then append either `-e SENSOR=counter` or `-e SENSOR=temperature` respectively when invoking the docker run instruction. Further, the default sensor update interval is set to **5 seconds**, but you can override it by appending the `-e INTERVAL=secs` parameter.
+
+```
+docker run --name pelion-demo -p 8888:8888 -e CLOUD_SDK_API_KEY=<YOUR_PELION_API_KEY> -e SENSOR=counter pelion/virtual-demo
+```
 
 ## Performing firmware update
 The docker image comes already pre-configured with the necessary tools to perform a firmware and delta update. In particular, build tools and the suite of tools from [manifest-tool](https://github.com/PelionIoT/manifest-tool) are included to a) create a delta firmware image and b) sign and produce a firmware manifest ready to be uploaded to Pelion portal to start an update campaign. 
