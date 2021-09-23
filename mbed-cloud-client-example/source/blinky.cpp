@@ -29,7 +29,7 @@
 #include "m2mresource.h"
 
 #include <assert.h>
-#include <string>
+#include <string.h>
 
 #define TRACE_GROUP "blky"
 

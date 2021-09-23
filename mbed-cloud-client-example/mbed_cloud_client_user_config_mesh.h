@@ -1,5 +1,5 @@
 // ----------------------------------------------------------------------------
-// Copyright 2016-2020 ARM Ltd.
+// Copyright 2021 Pelion.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -26,6 +26,7 @@
 
 #define MBED_CLOUD_CLIENT_LIFETIME                  86400
 
+
 #if !defined(MBED_CLOUD_CLIENT_TRANSPORT_MODE_UDP) && !defined(MBED_CLOUD_CLIENT_TRANSPORT_MODE_TCP) && !defined(MBED_CLOUD_CLIENT_TRANSPORT_MODE_UDP_QUEUE)
 #define MBED_CLOUD_CLIENT_TRANSPORT_MODE_TCP
 #endif
@@ -36,11 +37,28 @@
     #define SN_COAP_MAX_BLOCKWISE_PAYLOAD_SIZE      512
 #endif
 
+#if !defined(MBED_CLOUD_CLIENT_SUPPORT_UPDATE) && !defined(MBED_CLOUD_CLIENT_FOTA_ENABLE)
+    #define MBED_CLOUD_CLIENT_SUPPORT_UPDATE
+#endif
+
+/* Sets the download buffer for update client in bytes (min. 2048 bytes).
+ * This must be at least twice the SN_COAP_MAX_BLOCKWISE_PAYLOAD_SIZE value.
+ * Linux can use much larger buffers.
+ */
+#ifdef MBED_CONF_APP_MBED_CLOUD_CLIENT_UPDATE_BUFFER_SIZE
+#define MBED_CLOUD_CLIENT_UPDATE_BUFFER MBED_CONF_APP_MBED_CLOUD_CLIENT_UPDATE_BUFFER_SIZE
+#else
+#ifdef __linux__
+#define MBED_CLOUD_CLIENT_UPDATE_BUFFER             (2 * 1024 * 1024)
+#else
+#define MBED_CLOUD_CLIENT_UPDATE_BUFFER             2048
+#endif
+#endif // #ifdef MBED_CONF_APP_MBED_CLOUD_CLIENT_UPDATE_BUFFER_SIZE
+
 /* Developer flags for Update feature */
 #if defined(MBED_CONF_APP_DEVELOPER_MODE) &&  (MBED_CONF_APP_DEVELOPER_MODE == 1)
     #define MBED_CLOUD_DEV_UPDATE_CERT
     #define MBED_CLOUD_DEV_UPDATE_ID
 #endif /* MBED_CONF_APP_DEVELOPER_MODE */
-
 
 #endif /* MBED_CLOUD_CLIENT_USER_CONFIG_H */

@@ -1,5 +1,64 @@
 # Changelog for Pelion Device Management Client example application
 
+## Release 4.10.0 (07.07.2021)
+
+- NXP_LPC54628 target configured to use the new upgraded Update client with `FOTA_USE_ENCRYPTED_ONE_TIME_FW_KEY` key.
+- Mesh configuration in `mesh_wisun.json` is based on the new update FOTA implementation.
+- Changes to the implementation of update candidate image encryption:
+   - Added a new `FOTA_USE_ENCRYPTED_ONE_TIME_FW_KEY` option to `MBED_CLOUD_CLIENT_FOTA_KEY_ENCRYPTION`.
+   - Replaced `FOTA_USE_DEVICE_KEY` with `FOTA_USE_ENCRYPTED_ONE_TIME_FW_KEY` as the default value for `MBED_CLOUD_CLIENT_FOTA_KEY_ENCRYPTION` due to a security vulnerability found in `FOTA_USE_DEVICE_KEY`.
+      - For Mbed OS devices, the change to using `FOTA_USE_ENCRYPTED_ONE_TIME_FW_KEY` is a breaking change and requires a new bootloader that supports this feature.
+   - This release uses bootloaders compiled with the above improvement by default.
+   - Deprecated the `FOTA_USE_DEVICE_KEY` option, which will be removed in a future version.
+* Updated to Mbed OS 6.12.0.
+
+## Release 4.9.1 (17.06.2021)
+
+* No changes.
+
+## Release 4.9.0 (21.05.2021)
+
+* [Mbed OS] Increased `SN_COAP_BLOCKWISE_MAX_TIME_DATA_STORED` stored time to 15min for mesh to account for long retransmission chains during blockwise transfers.
+* [Mbed OS] Updated ISM43362 Wi-Fi driver to #09a71bf with fix to mutex handling.
+* Removed unregister resource `5000/0/1` from the application. Device Management Client library now implements OMA resource ` 1/0/4`, which supports deregistration.
+* Removed delta-tool from the application.
+  * The current supported version (2.2.0 or later) of [manifest-tool](https://github.com/PelionIoT/manifest-tool) provides the functionality internally.
+* Updated cURL to 7.76.0 in `pal-platform`.
+* Fixed Atmel SE configuration.
+* Updated to Mbed OS 6.9.0.
+* [Linux] Updated Mbed TLS to 2.25.0.
+
+## Release 4.8.0 (24.03.2021)
+
+* Updated to Mbed OS 6.8.0.
+* Updated cURL to 7.75.0 in `pal-platform`.
+* Updated parsec-se-driver to 0.4.0.
+* Updated to Pelion E2E test library v0.2.10.
+* Removed support for SXOS platform in the application.
+* Consolidated the K64F ESP8266 configuration to wifi_esp8266_minimal.json.
+* K66F PSA has been removed.
+* DISCO_L475VG_IOT01A target bootloader was increased from 36kB to 38kB.
+* Introduction of upgraded Update client:
+  * The new features of the upgraded Update client:
+    * Component update.
+    * Resume after power failure.
+    * Defer firmware update installation.
+    * Candidate encryption on external storage.
+  * Mbed OS non-mesh and Linux targets are configured to use the new upgraded Update client.
+     * Note - if you wish to use legacy Update client in your Mbed OS non mesh target, please refer to the configurations in PDMC exmaple 4.7.1.
+  * Legacy Update client is still used in Mbed OS mesh targets and SDK's targets (NXP, Renesas).
+  * Upgraded update client bootloaders are located in prebuild-bl folder. Legacy bootloaders are located in tools folder
+  * On K64F, NUCLEO_F411RE, DISCO_L475VG_IOT01A targets, the update candidate is stored encrypted on the external storage encrypted.
+  * Migration documentation guide was created for existing customers that wish to migrate legacy Update client to the new Update client - [TBD Link to https://github.com/PelionIoT/mbed_Cloud_Docs/pull/1689/files].
+     * Note - once migrated to new Update client, only "Component update" feature will be available. For using other features of new Update client, the device needs to be reflashed with the new configuration and new bootloader.
+
+## Release 4.7.1 (28.01.2021)
+
+- [Mbed OS] Updated ISM43362 Wi-Fi driver to #3813a4b with fixes for logging and UDP socket handling.
+- Updated to Pelion end-to-end test library v0.2.8.
+- Added a `requirements.txt` file for the application.
+- The application and tooling now supports [manifest-tool v2.1.0](https://github.com/PelionIoT/manifest-tool/releases/tag/v2.1.0) or later with manifest version 1.
+
 ## Release 4.7.0 (07.12.2020)
 
 * Updated to Mbed OS 6.5.0.
@@ -46,7 +105,7 @@
 * Updated to Pelion E2E test library v0.2.6.
 * Added a network error counter that resets the device if too many errors have occurred
 * Added sleeping device example that is enabled with `MBED_CLOUD_CLIENT_TRANSPORT_MODE_UDP_QUEUE` option. The sleepy device will `pause` the client when client goes to sleep,
-whenever application will try to send notification, if the client is `paused` then application will first `resume` client and then send notification. 
+whenever application will try to send notification, if the client is `paused` then application will first `resume` client and then send notification.
 * Added support for Device Sentry feature for Mbed OS and Linux.
   * Mbed OS - the feature is enabled for K66F board.
   * Linux - the feature is enabled by passing the `ENABLE_DEVICE_SENTRY` CMake flag.
@@ -127,7 +186,7 @@ No changes.
 
 * Added PSA configuration for K66F (`configs-psa/eth_v4.json`).
 * Updated usage of new Update Authorization API, which takes in priority as well, `set_update_authorize_priority_handler` instead of `set_update_authorize_handler`.
-* Use `set_message_delivery_status_cb` as part of unregister resource triggering to make sure device does not close the network connection before client is able to send the final ACK to server. 
+* Use `set_message_delivery_status_cb` as part of unregister resource triggering to make sure device does not close the network connection before client is able to send the final ACK to server.
 * [Linux] Updated Mbed TLS to 2.18.1.
 * [Mbed OS] Removed the legacy ESFS-SOTP configurations from the applications. Only KVstore is supported for client storage.
 
@@ -182,7 +241,7 @@ No changes.
 
 * Updated to Mbed OS 5.12.0.
 * [Mbed OS] Use asyncronous DNS by default for all targets.
-* [Mbed OS] Preview support for Platform Security Architecture (PSA) enabled boards. 
+* [Mbed OS] Preview support for Platform Security Architecture (PSA) enabled boards.
    * PSA configuration for PSA-enabled Cypress PSoC6 and NXP LPC55S69 boards. Configuration is in the `configs-psa/` folder.
    * Both PSA-enabled boards use ESP8266 Wi-Fi.
    * PSA configuration for K64F board.
@@ -296,7 +355,7 @@ No changes.
 
 * Linux: Converted all timers to use signal-based timer (`SIGEV_SIGNAL`) instead of (`SIGEV_THREAD`).
   * This fixes the Valgrind warnings for possible memory leaks caused by LIBC's internal timer helper thread.
-  
+
       <span class="notes">**Note**: If the client application is creating a pthread before instantiating MbedCloudClient,
     it needs to block the `PAL_TIMER_SIGNAL` from it. Otherwise, the thread may get an exception caused
     by the default signal handler with a message such as "Process terminating with default action

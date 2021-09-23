@@ -54,13 +54,8 @@
 #include "nanostack-event-loop/eventOS_scheduler.h"
 #endif
 
-#ifdef MBED_CLOUD_CLIENT_SUPPORT_MULTICAST_UPDATE
-#include "multicast.h"
-#endif
-
 #if defined MBED_CONF_MBED_CLOUD_CLIENT_NETWORK_MANAGER && \
  (MBED_CONF_MBED_CLOUD_CLIENT_NETWORK_MANAGER == 1)
-#include "NetworkInterface.h"
 #include "NetworkManager.h"
 #endif
 
@@ -190,12 +185,6 @@ void sent_callback(const M2MBase &base,
     }
 }
 
-void unregister_triggered(void)
-{
-    printf("Unregister resource triggered\r\n");
-    unregister_res->send_delayed_post_response();
-}
-
 void factory_reset_triggered(void *)
 {
     printf("Factory reset resource triggered\r\n");
@@ -243,7 +232,7 @@ static coap_response_code_e read_requested(const M2MResourceBase& resource,
     // Allocate buffer when first request comes in
     if (offset == 0) {
         large_res_data = (uint8_t*)malloc(large_res_size);
-        memset(large_res_data, '0', large_res_size);
+        memset(large_res_data, 0, large_res_size);
     }
 
     if (!large_res_data) {
@@ -270,6 +259,7 @@ void main_application(void)
     // not produce enough output to fill the buffer
     setlinebuf(stdout);
 #endif
+
     // Initialize trace-library first
     if (application_init_mbed_trace() != 0) {
         printf("Failed initializing mbed trace\r\n");
@@ -314,7 +304,6 @@ void main_application(void)
      * 4. Connect Device Management Client to service using `setup()`.          // Implemented in `mbedClient.register_and_connect)`.
      */
     (void) mcc_platform_interface_init();
-    mbedClient.init();
 
     // application_init() runs the following initializations:
     //  1. platform initialization
@@ -325,8 +314,14 @@ void main_application(void)
         return;
     }
 
+    mbedClient.init();
+
 #if defined MBED_CONF_MBED_CLOUD_CLIENT_NETWORK_MANAGER &&\
  (MBED_CONF_MBED_CLOUD_CLIENT_NETWORK_MANAGER == 1)
+    if (network_manager.configure_factory_mac_address(NetworkInterface::get_default_instance()) != NM_ERROR_NONE) {
+        printf("Failed: configure_factory_mac_address\n");
+        return;
+    }
     printf("Configuring Interface\r\n");
     if (network_manager.reg_and_config_iface(NetworkInterface::get_default_instance()) != NM_ERROR_NONE) {
         printf("Failed to register and configure Interface\r\n");
@@ -338,15 +333,22 @@ void main_application(void)
     mcc_platform_sw_build_info();
 
     // Initialize network
-    int timeout_ms = 1000;
+    int timeout_ms = 5000;
+    int retry_counter = 0;
     while (-1 == mcc_platform_interface_connect()){
-        // Will try to connect using mcc_platform_interface_connect forever. 
+        // Will try to connect using mcc_platform_interface_connect forever.
         // wait timeout is always doubled
         printf("Network connect failed. Try again after %d milliseconds.\n",timeout_ms);
         mcc_platform_do_wait(timeout_ms);
         timeout_ms *= 2;
+
+        if (++retry_counter == MAX_PDMC_CLIENT_CONNECTION_ERROR_COUNT) {
+            printf("Max error count %d reached, rebooting.\n\n", MAX_PDMC_CLIENT_CONNECTION_ERROR_COUNT);
+            mcc_platform_do_wait(1000);
+            mcc_platform_reboot();
+        }
     }
-    printf("Network initialized, registering...\r\n");    
+    printf("Network initialized, registering...\r\n");
 
 #ifdef MEMORY_TESTS_HEAP
     printf("Client initialized\r\n");
@@ -387,18 +389,13 @@ void main_application(void)
     }
     // Create resource for led blinking pattern. Path of this resource will be: 3201/0/5853.
     pattern_res = mbedClient.add_cloud_resource(3201, 0, 5853, "pattern_resource", M2MResourceInstance::STRING,
-                               M2MBase::GET_PUT_ALLOWED, "500:500:500:500:500:500", true, (void*)pattern_updated, (void*)notification_status_callback);
+                                                M2MBase::GET_PUT_ALLOWED, "500:500:500:500:500:500", true, (void *)pattern_updated, (void *)notification_status_callback);
 
     // Create resource for starting the led blinking. Path of this resource will be: 3201/0/5850.
     blink_res = mbedClient.add_cloud_resource(3201, 0, 5850, "blink_resource", M2MResourceInstance::STRING,
-                             M2MBase::GET_POST_ALLOWED, "", false, (void*)blink_callback, (void*)notification_status_callback);
+                                              M2MBase::GET_POST_ALLOWED, "", false, (void *)blink_callback, (void *)notification_status_callback);
     // Use delayed response
     blink_res->set_delayed_response(true);
-
-    // Create resource for unregistering the device. Path of this resource will be: 5000/0/1.
-    unregister_res = mbedClient.add_cloud_resource(5000, 0, 1, "unregister", M2MResourceInstance::STRING,
-                 M2MBase::POST_ALLOWED, NULL, false, (void*)unregister_triggered, (void*)sent_callback);
-    unregister_res->set_delayed_response(true);
 
     // Create optional Device resource for running factory reset for the device. Path of this resource will be: 3/0/5.
     factory_reset_res = M2MInterfaceFactory::create_device()->create_resource(M2MDevice::FactoryReset);
@@ -419,11 +416,6 @@ void main_application(void)
     factory_reset_res->set_auto_observable(true);
 #endif
 
-#endif
-
-    // TODO! replace when api available in wisun interface
-#ifdef MBED_CLOUD_CLIENT_SUPPORT_MULTICAST_UPDATE
-    arm_uc_multicast_interface_configure(1);
 #endif
 
     mbedClient.register_and_connect();
