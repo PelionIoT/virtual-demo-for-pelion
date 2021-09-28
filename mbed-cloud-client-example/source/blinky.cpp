@@ -1,5 +1,5 @@
 // ----------------------------------------------------------------------------
-// Copyright 2018-2020 ARM Ltd.
+// Copyright 2018-2021 Pelion.
 //
 // SPDX-License-Identifier: Apache-2.0
 //
@@ -16,22 +16,19 @@
 // limitations under the License.
 // ----------------------------------------------------------------------------
 
-#include "blinky.h"
-
-#include "sal-stack-nanostack-eventloop/nanostack-event-loop/eventOS_event.h"
-#include "sal-stack-nanostack-eventloop/nanostack-event-loop/eventOS_event_timer.h"
-#include "ns-hal-pal/ns_hal_init.h"
-#include "mbed-trace/mbed_trace.h"
-
-#include "mcc_common_button_and_led.h"
-#include "simplem2mclient.h"
-#include "commander.h"
-#include "m2mresource.h"
 
 #include <assert.h>
 #include <string.h>
+#include <stdio.h>
 
-#define TRACE_GROUP "blky"
+#include "blinky.h"
+#include "sal-stack-nanostack-eventloop/nanostack-event-loop/eventOS_event.h"
+#include "sal-stack-nanostack-eventloop/nanostack-event-loop/eventOS_event_timer.h"
+#include "ns-hal-pal/ns_hal_init.h"
+#include "mcc_common_button_and_led.h"
+#include "pdmc_example.h"
+#include "commander.h"
+#include "m2mresource.h"
 
 #define BLINKY_TASKLET_LOOP_INIT_EVENT 0
 #define BLINKY_TASKLET_PATTERN_INIT_EVENT 1
@@ -51,27 +48,27 @@ int8_t Blinky::_tasklet = -1;
 
 extern "C" {
 
-static void blinky_event_handler_wrapper(arm_event_s *event)
-{
-    assert(event);
-    if (event->event_type != BLINKY_TASKLET_LOOP_INIT_EVENT) {
-        // the init event will not contain instance pointer
-        Blinky *instance = (Blinky *)event->data_ptr;
-        if(instance) {
-            instance->event_handler(*event);
+    static void blinky_event_handler_wrapper(arm_event_s *event)
+    {
+        assert(event);
+        if (event->event_type != BLINKY_TASKLET_LOOP_INIT_EVENT) {
+            // the init event will not contain instance pointer
+            Blinky *instance = (Blinky *)event->data_ptr;
+            if (instance) {
+                instance->event_handler(*event);
+            }
         }
     }
-}
 
 }
 
 Blinky::Blinky()
-: _pattern(NULL),
-  _curr_pattern(NULL),
-  _client(NULL),
-  _sensed_res(NULL),
-  _state(STATE_IDLE),
-  _restart(false)
+    : _pattern(NULL),
+      _curr_pattern(NULL),
+      _client(NULL),
+      _sensed_res(NULL),
+      _state(STATE_IDLE),
+      _restart(false)
 {
     _sensed_count = 0;
 }
@@ -91,7 +88,7 @@ void Blinky::create_tasklet()
 }
 
 // use references to encourage caller to pass this existing object
-void Blinky::init(SimpleM2MClient &client, Commander *commander, M2MResource *resource, long sensor_update_interval_s, std::string sensor_type)
+void Blinky::init(MbedCloudClient &client, Commander *commander, M2MResource *resource, long sensor_update_interval_s, std::string sensor_type)
 {
     // Do not start if resource has not been allocated.
     if (!resource) {
@@ -103,11 +100,12 @@ void Blinky::init(SimpleM2MClient &client, Commander *commander, M2MResource *re
     _sensor_type = sensor_type;
     _sensed_res = resource;
     _sensor_update_interval_s = sensor_update_interval_s;
+    
     // create the tasklet, if not done already
     create_tasklet();
 }
 
-bool Blinky::start(const char* pattern, size_t length, bool pattern_restart)
+bool Blinky::start(const char *pattern, size_t length, bool pattern_restart)
 {
     assert(pattern);
 
@@ -119,7 +117,7 @@ bool Blinky::start(const char* pattern, size_t length, bool pattern_restart)
     // allow one to start multiple times before previous sequence has completed
     stop();
 
-    _pattern = (char*)malloc(length+1);
+    _pattern = (char *)malloc(length + 1);
     if (_pattern == NULL) {
         return false;
     }
@@ -156,7 +154,7 @@ int Blinky::get_next_int()
         } else if (*endptr == '\0') { // end of
             result = conv_result;
         } else {
-            tr_debug("invalid char %c", *endptr);
+            printf("invalid char %c\n", *endptr);
         }
     }
 
@@ -259,18 +257,18 @@ void Blinky::handle_buttons()
     // this might be stopped now, but the loop should then be restarted after re-registration
     request_next_loop_event();
 
-    if (_client->is_client_registered()) {
+    if (pdmc_registered()) {
         if ((_sensor_type == "counter") && _shake) {
 #ifdef MBED_CLOUD_CLIENT_TRANSPORT_MODE_UDP_QUEUE
-        if(_client->is_client_paused()) {
-            printf("Calling Pelion Client resumed()\r\n");
-            _client->client_resumed();
-        }
+            if (pdmc_paused()) {
+                printf("Calling Pelion Client resumed()\r\n");
+                pdmc_resume();
+            }
 #endif
             _sensed_count = _sensed_res->get_value_int() + 1;
             _sensed_res->set_value(_sensed_count);
             _commander->sendMsg("observe", _sensed_res->uri_path(), std::to_string(_sensed_count).c_str());
-            printf("Button resource manually updated. Value %d\r\n", _sensed_count);
+            printf("Resource(%s) manually updated. Value %d\r\n", _sensed_res->uri_path(), _sensed_count);
         }
     }
 }
@@ -291,18 +289,21 @@ void Blinky::handle_automatic_increment()
 
     // this might be stopped now, but the loop should then be restarted after re-registration
     request_automatic_increment_event();
-    if (_client->is_client_registered()) {
+
+    if (pdmc_registered()) {
 #ifdef MBED_CLOUD_CLIENT_TRANSPORT_MODE_UDP_QUEUE
-        if(_client->is_client_paused()) {
+        if (pdmc_paused()) {
             printf("Calling Pelion Client resumed()\r\n");
-            _client->client_resumed();
+            pdmc_resume();
         }
 #endif
+
         if (_sensor_type == "vibration") {
             _sensed_count = _shake? abs(rand() % 10)+20: abs(rand() % 10);
-        }
-        else if (_sensor_type == "counter") {
+        } else if (_sensor_type == "counter") {
             _sensed_count = _sensed_res->get_value_int() + 1; 
+        } else if (_sensor_type == "temperature") {
+            _sensed_count = _shake? abs(rand() % 10)+20: abs(rand() % 10);
         }
 
         _sensed_res->set_value(_sensed_count);

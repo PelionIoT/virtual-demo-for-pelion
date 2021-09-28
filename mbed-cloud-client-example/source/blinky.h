@@ -21,15 +21,14 @@
 
 #include "sal-stack-nanostack-eventloop/nanostack-event-loop/eventOS_event.h"
 
-class SimpleM2MClient;
 class M2MResource;
+class MbedCloudClient;
 class Commander;
 
 #include <stdint.h>
 #include <string>
 
-class Blinky
-{
+class Blinky {
     typedef enum {
         STATE_IDLE,
         STATE_STARTED,
@@ -40,13 +39,15 @@ public:
 
     ~Blinky();
 
-    void init(SimpleM2MClient &client, Commander *commander, M2MResource *resource, long sensor_update_interval, std::string sensor_type);
+    void init(MbedCloudClient &client, Commander *commander, M2MResource *resource, long sensor_update_interval, std::string sensor_type);
 
-    bool start(const char* pattern, size_t length, bool pattern_restart);
+    bool start(const char *pattern, size_t length, bool pattern_restart);
 
     void stop();
+
     void shake(bool enable);
     std::string sensor_type();
+
 public:
     // This needs
     void event_handler(const arm_event_s &event);
@@ -71,7 +72,7 @@ private:
     char *_pattern;
     const char *_curr_pattern;
 
-    SimpleM2MClient *_client;
+    MbedCloudClient *_client;
 
     Commander *_commander;
 
@@ -89,7 +90,6 @@ private:
 
     bool _shake;
 
-    long _sensor_update_interval_s;
-
+    long _sensor_update_interval_s;   
 };
 #endif /* __BLINKY_H__ */

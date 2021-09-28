@@ -1,10 +1,10 @@
 #include "commander.h"
 #include "blinky.h"
 #include "json.h"
-#include "simplem2mclient.h"
 
 #include "fota/fota_component.h"
 #include "fota/fota_curr_fw.h"
+#include "MbedCloudClient.h"
 
 #include <cstring>
 #include <fcntl.h>
@@ -25,7 +25,7 @@
 using json = nlohmann::json;
 using namespace std;
 
-Commander::Commander(SimpleM2MClient &client, Blinky &blinky)
+Commander::Commander(MbedCloudClient &client, Blinky &blinky)
     : _client(client), _blinky(blinky) {
   struct mq_attr attr;
 
@@ -97,7 +97,7 @@ void Commander::listen() {
 
       if (cmd == "getID") {
         const ConnectorClientEndpointInfo *endpoint =
-            _client.get_cloud_client().endpoint_info();
+            _client.endpoint_info();
 
         if (endpoint) {
           sendMsg("getID", NULL, endpoint->internal_endpoint_name.c_str());

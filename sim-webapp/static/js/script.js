@@ -17,7 +17,7 @@ function onLoad() {
         var response = JSON.parse(message.data);
         switch (response.cmd) {
             case "getID":
-                device_id = response.data.substr(response.data.length - 7);
+                device_id = response.data.substr(0, 15);
                 $("#deviceID").text(device_id);
                 break;
             case "getFW":

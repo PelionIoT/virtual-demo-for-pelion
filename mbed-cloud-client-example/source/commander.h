@@ -3,18 +3,18 @@
 
 #include <mqueue.h>
 
-class SimpleM2MClient;
+class MbedCloudClient;
 class Blinky;
 
 class Commander {
 
 private:
-  SimpleM2MClient &_client;
+  MbedCloudClient &_client;
   Blinky &_blinky;
   mqd_t qd_cmd, qd_resp, qd_fota; // mqueue descriptors
 
 public:
-  Commander(SimpleM2MClient &client, Blinky &blinky);
+  Commander(MbedCloudClient &client, Blinky &blinky);
 
   void sendMsg(const char *cmd, const char *params, const char *data);
   void listen();

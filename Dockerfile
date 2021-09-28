@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 ENV CLOUD_SDK_API_KEY YOUR_PELION_API_KEY
 
@@ -12,17 +12,14 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # install packages
 RUN apt-get update && apt-get -y install \
-    git vim \
+    git vim curl \
     build-essential \
     automake make cmake \
     python3 python3-pip \
  && rm -rf /var/lib/apt/lists/*
 
-# install mbed-cli
-RUN pip3 install mercurial requests click mbed-cli tornado posix_ipc
-
-# install latest manifest-tool
-RUN pip3 install https://github.com/PelionIoT/manifest-tool/archive/v2.1.1.tar.gz
+# install python deps.
+RUN pip3 install mercurial requests click tornado posix_ipc mbed-cli manifest-tool
 
 # Add pelion-client and webapp
 ADD mbed-cloud-client-example /build/mbed-cloud-client-example
@@ -33,15 +30,14 @@ WORKDIR /build/mbed-cloud-client-example
 
 # deploy mbed lib deps.
 RUN mbed config root . \
- && mbed deploy \
- && cp ./patch/bspatch.c ./mbed-cloud-client/update-client-hub/delta-tool-internal/source/
+ && mbed deploy
 
 # initialize cmake and & build demo
 RUN python3 pal-platform/pal-platform.py deploy --target=x86_x64_NativeLinux_mbedtls generate
 WORKDIR /build/mbed-cloud-client-example/__x86_x64_NativeLinux_mbedtls
 RUN cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=./../pal-platform/Toolchain/GCC/GCC.cmake \
-     -DEXTERNAL_DEFINE_FILE=./../define_linux_update.txt -DFOTA_ENABLE=ON -DFOTA_TRACE=ON \
-     && make mbedCloudClientExample.elf
+     -DEXTERNAL_DEFINE_FILE=./../define.txt \
+    && make mbedCloudClientExample.elf
 
 EXPOSE 8888
 
