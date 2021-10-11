@@ -258,7 +258,7 @@ void Blinky::handle_buttons()
     request_next_loop_event();
 
     if (pdmc_registered()) {
-        if ((_sensor_type == "counter") && _shake) {
+        if ((_sensor_type == "counter" || _sensor_type == "temperature") && _shake) {
 #ifdef MBED_CLOUD_CLIENT_TRANSPORT_MODE_UDP_QUEUE
             if (pdmc_paused()) {
                 printf("Calling Pelion Client resumed()\r\n");
@@ -303,7 +303,7 @@ void Blinky::handle_automatic_increment()
         } else if (_sensor_type == "counter") {
             _sensed_count = _sensed_res->get_value_int() + 1; 
         } else if (_sensor_type == "temperature") {
-            _sensed_count = _shake? abs(rand() % 10)+20: abs(rand() % 10);
+            _sensed_count = _sensed_res->get_value_int() + 1;
         }
 
         _sensed_res->set_value(_sensed_count);

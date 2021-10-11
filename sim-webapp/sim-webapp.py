@@ -24,6 +24,7 @@ import threading
 import posix_ipc
 import asyncio
 import contextlib
+import time
 
 import tornado.escape
 import tornado.ioloop
@@ -35,15 +36,17 @@ from tornado.options import define, options
 
 define("port", default=8888, help="run on the given port", type=int)
 
-config = {}
-
+# setup posix queues
 MQUEUE_CMD = "/mqueue-cmd"
 MQUEUE_RESP = "/mqueue-resp"
 qd_cmd = posix_ipc.MessageQueue(
     name=MQUEUE_CMD, flags=posix_ipc.O_CREAT, max_messages=10, max_message_size=256)
 qd_resp = posix_ipc.MessageQueue(
     name=MQUEUE_RESP, flags=posix_ipc.O_CREAT, max_messages=10, max_message_size=256)
+# set log level
+logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
+config = {}
 
 class Application(tornado.web.Application):
     def __init__(self):
@@ -137,7 +140,64 @@ def build():
                      cwd='/build/mbed-cloud-client-example/__x86_x64_NativeLinux_mbedtls').wait()
 
 
-def _main():
+def provisioning_run():
+    logging.info("launching in [factory-provisioning] mode..\n")
+
+    # check if tpm auth is needed - needs to be done only once
+    needs_tpm_auth = not os.path.isfile('/build/NVChip')
+    
+    # startup tpm and friends..
+    logging.info("starting 'tpm_server'..")
+    subprocess.Popen('tpm_server',
+                    cwd='/build', stdout=subprocess.DEVNULL)
+    time.sleep(1) # artificially wait for tpm_server to start
+
+    # tpm2_startup
+    subprocess.Popen(['tpm2_startup', '-c', '-T', 'mssim'],
+                     cwd='/build', stdout=subprocess.DEVNULL).wait()
+
+    # tpm2_changeauth
+    if needs_tpm_auth:
+        logging.info("setting up authentication to 'tpm_server'..")
+        subprocess.Popen(['tpm2_changeauth', '-c', 'owner', 'tpm_pass', '-T', 'mssim']).wait()
+
+    # parsec
+    logging.info("starting 'parsec'..")
+    subprocess.Popen(['parsec', '-c', 'config-parsec.toml'],
+                    cwd='/build', stdout=subprocess.DEVNULL)
+    time.sleep(1) # artificially wait for parsec startup
+
+    # check if we provisioning already occurred
+    if os.path.isdir('/build/factory-configurator-client-example/__x86_x64_NativeLinux_mbedtls/Debug/psa/'):
+        logging.info("[factory-provisioning] has already occurred, starting 'virtual-demo' in production mode..")
+        # launch pelion client in a separate process
+        subprocess.Popen(['./mbedCloudClientExample.elf'],
+                     cwd='/build/mbed-cloud-client-example-production')
+
+        # launch web app
+        app = Application()
+        app.listen(options.port)
+        tornado.ioloop.IOLoop.current().start()
+
+    else:
+        # launch factory-configurator-client-example
+        returncode = subprocess.Popen(['./factory-configurator-client-example.elf'],
+                        cwd='/build/factory-configurator-client-example/__x86_x64_NativeLinux_mbedtls/Debug/').wait()
+
+        if returncode == 0: # provisioning succeeded
+            # copy 'psa' folder to be ready for next run
+            subprocess.Popen(['cp','-r', '/build/factory-configurator-client-example/__x86_x64_NativeLinux_mbedtls/Debug/psa', '/build/mbed-cloud-client-example-production']).wait()
+            # inform user and exit
+            logging.info("[factory-provisioning] completed successfully, please start virtual-demo with 'docker start -a pelion-demo'..")
+            exit(0)
+        else:
+            print("An error occurred during factory-provisioning, exiting..")
+            exit(1)
+
+
+def virtual_demo_run():
+    logging.info("launching in [dev] mode..\n")
+
     tornado.options.parse_command_line()
 
     # check if CLOUD_SDK_API_KEY env is configured
@@ -152,14 +212,6 @@ def _main():
 
     # check if CLOUD_URL env is configured (default to prod.)
     config['cloud_url'] = os.getenv('CLOUD_URL', 'https://api.us-east-1.mbedcloud.com')
-
-    # check if SENSOR env is configured
-    config['sensor_type'] = os.getenv('SENSOR', 'vibration')
-    if config['sensor_type'] != "vibration" and config['sensor_type'] != "temperature" and config['sensor_type'] != "counter":
-        logging.error(
-            "unknown sensor type configured, please use either 'vibration', 'temperature' or 'counter'\n"
-        )
-        exit(1)
 
     # check if we need to generate certs
     if not os.path.isfile('certexists'):
@@ -183,6 +235,23 @@ def _main():
     app = Application()
     app.listen(options.port)
     tornado.ioloop.IOLoop.current().start()
+
+def _main():
+    # check if SENSOR env is configured
+    config['sensor_type'] = os.getenv('SENSOR', 'vibration')
+    if config['sensor_type'] != "vibration" and config['sensor_type'] != "temperature" and config['sensor_type'] != "counter":
+        logging.error(
+            "unknown sensor type configured, please use either 'vibration', 'temperature' or 'counter'\n"
+        )
+        exit(1)
+
+    # determine if provisioning mode is on
+    provisioning_mode = os.getenv('FACTORY_PROVISIONING_MODE', 'OFF')
+
+    if provisioning_mode == "ON":
+        provisioning_run()
+    else:
+        virtual_demo_run()
 
 
 if __name__ == "__main__":

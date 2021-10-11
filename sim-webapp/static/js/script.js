@@ -55,12 +55,11 @@ function onLoad() {
                 break;
             case "sensorType":
                 sensor_type = response.data;
-                if (sensor_type === "counter")
-                {
+                if (sensor_type === "counter" || sensor_type === "temperature") {
                     $("#shakeButtonId").text("+1");
-                } else if (sensor_type === "vibration"){
+                } else if (sensor_type === "vibration") {
                     $("#shakeButtonId").text("SHAKE");
-                } 
+                }
                 // else the default "BUTTON" label will be used from the static index.html file
                 
                 break;
