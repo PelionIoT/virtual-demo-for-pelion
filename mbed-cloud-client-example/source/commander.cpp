@@ -81,8 +81,6 @@ void Commander::listen() {
     char in_buffer[MSG_BUFFER_SIZE];
 
     while (true) {
-      ssize_t size;
-
       if (mq_receive(qd_cmd, in_buffer, MSG_BUFFER_SIZE, NULL) == -1) {
         perror("[Commander]: mq_receive (qd_cmd)");
         exit(1);
@@ -131,8 +129,6 @@ void Commander::listen() {
     char in_buffer[MSG_BUFFER_SIZE];
 
     while (true) {
-      ssize_t size;
-
       if (mq_receive(qd_fota, in_buffer, MSG_BUFFER_SIZE, NULL) == -1) {
         perror("[Commander]: mq_receive (qd_fota)");
         exit(1);
