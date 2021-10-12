@@ -1,0 +1,74 @@
+{
+    "macros": [
+        "FCC_ENABLE_FULL_TRACING"
+    ],
+    "target_overrides": {
+        "*": {
+            "platform.stdio-buffered-serial"             : true,
+            "platform.stdio-baud-rate"                   : 115200,
+            "platform.stdio-convert-newlines"            : true,
+            "target.features_add"                        : [ "EXPERIMENTAL_API", "STORAGE" ],
+            "target.c_lib"                               : "std",
+            "mbed-trace.enable"                          : 1,
+            "mbed-cloud-client.external-sst-support"     : 1,
+            "target.OUTPUT_EXT"                          : "hex",
+            "mbed-cloud-client.psa-support"              : 1,
+            "storage.storage_type"                      : null,
+            "storage_filesystem.filesystem"             : null,
+            "storage_filesystem.blockdevice"            : null,
+            "storage_tdb_internal.internal_base_address": null,
+            "storage_tdb_internal.internal_size"        : null,
+            "storage_filesystem.internal_base_address"  : null,
+            "storage_filesystem.rbp_internal_size"      : null,
+            "storage_filesystem.external_base_address"  : null,
+            "storage_filesystem.external_size"          : null
+        },
+        "K64F": {
+            "lwip.tcpip-thread-stacksize"                : 2400,
+            "target.extra_labels_add"                    : ["BL_SD"],
+            "target.header_offset"                       : "0xa000",
+            "target.app_offset"                          : "0xa200",
+            "target.components_add"                      : ["SD"],
+            "mbedtls-user-config-file"                   : "\"mbedTLSConfig_mbedOS.h\"",
+            "pal-user-defined-config"                    : "\"pal_config_MbedOS.h\""
+        },
+        "K66F": {
+            "lwip.tcpip-thread-stacksize"                : 2400,
+            "target.extra_labels_add"                   : ["BL_INTERNAL_FLASH"],
+            "target.header_offset"                       : "0x8000",
+            "target.app_offset"                          : "0x8200",
+            "mbedtls-user-config-file"                   : "\"mbedTLSConfig_mbedOS.h\"",
+            "pal-user-defined-config"                    : "\"pal_config_MbedOS.h\""
+        }       
+    },
+    "config": {
+        "main-stack-size"          : {
+            "value"                : 8192
+        },
+        "user-config": {
+            "help"                 : "Defines which user configuration to use.",
+            "macro_name"           : "MBED_CLOUD_CLIENT_USER_CONFIG_FILE",
+            "value"                : "\"mbed_cloud_client_user_config.h\""
+        },
+        "mbedtls-user-config-file" : {
+            "help"                 : "Mbetls user configuration file",
+            "macro_name"           : "MBEDTLS_USER_CONFIG_FILE",
+            "value"                : null
+        },
+        "pal-user-defined-config": {
+            "help"                 : "PAL user configuration file",
+            "macro_name"           : "PAL_USER_DEFINED_CONFIGURATION",
+            "value"                : null
+        },
+        "mbed-trace-max-level": {
+            "help"                 : "Max trace level. Must be one of the following: [TRACE_LEVEL_DEBUG, TRACE_LEVEL_INFO, TRACE_LEVEL_WARN, TRACE_LEVEL_ERROR, TRACE_LEVEL_CMD]",
+            "macro_name"           : "MBED_TRACE_MAX_LEVEL",
+            "value"                : "TRACE_LEVEL_INFO"
+        },
+        "bootloader-size": {
+            "help"      : "Helper macro to enable calculation of rom regions. target.header_offset and target.app_offset still needs to be calculated manually, though.",
+            "value"     : "(32*1024)",
+            "macro_name": "MBED_BOOTLOADER_SIZE"
+        }
+    }
+}
