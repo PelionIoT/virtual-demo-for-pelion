@@ -28,7 +28,10 @@ The demo is *not intended* to be used as a:
 * Method of running firmware update management for Linux IoT devices. The firmware update method demoed here is for single-application updates. When you're working with real Linux IoT devices you should implement update methods for Linux packages and any application libraries that you use. We suggest that you take a look at Pelion Edge if you're implementing that type of product.
 
 ## Updates
-* V1.1 Feb 2021
+* **V1.2 Oct 2021**
+    * Support for [factory-provisioning mode](#factory-provisioning)
+	* Mbed cloud client updated to v4.11.1
+* **V1.1 Feb 2021**
 	* Mbed cloud client updated to v4.7.0
 	* Firmware update added including delta update generation
 	* Multi-sensor type support. Inclusion of an option to build a counter-type device with the same functionality as mbed cloud client example
@@ -46,7 +49,7 @@ If you're running the demo locally then docker needs to be installed on your hos
     docker run --name pelion-demo -p 8888:8888 -e CLOUD_SDK_API_KEY=<YOUR_PELION_API_KEY> pelion/virtual-demo
     ```
     
-    > Note: You can also specify the default Pelion Cloud address to use using `CLOUD_URL` environment variable, if omitted the default '`api.us-east-1.mbedcloud.com`' production address is used.
+    > NOTE: You can also specify the default Pelion Cloud address to use using `CLOUD_URL` environment variable, if omitted the default '`api.us-east-1.mbedcloud.com`' production address is used.
 
 3. Point your web browser to [http://localhost:8888](http://localhost:8888) to access the user interface of the virtual device.
 
@@ -99,7 +102,7 @@ Let's change the firmware code running on the virtual device, to simulate a code
     $ docker cp pelion-demo:/build/mbed-cloud-client-example/__x86_x64_NativeLinux_mbedtls/Debug/mbedCloudClientExample.elf ./firmwares/current_fw.bin
 
 
-4. Let's alter the emitted simulated vibration value sent by the virtual demo to be multiplied by 1000. Using `vi` editor, open `source/blinky.cpp`, navigate to line `:307` and add the following line:
+4. Let's alter the emitted simulated value sent by the virtual demo to be multiplied by 1000. Using `vi` editor, open `source/blinky.cpp`, navigate to line `:308` and add the following line:
 
     ```
     _sensed_count = _sensed_count * 1000;
@@ -138,7 +141,7 @@ You can now choose either to perform a full firmware image update or a delta pat
     ```
     $ ls -l /build/mbed-cloud-client-example/__x86_x64_NativeLinux_mbedtls/Debug/mbedCloudClientExample.elf
     
-    -rwxr-xr-x 1 root root 6562120 Jan 27 11:11 mbedCloudClientExample.elf
+    -rwxr-xr-x. 1 root root 7115152 Oct 11 07:12 mbedCloudClientExample.elf
     ```
 4. We now need to generate the firmware manifest describing the update, upload it to the portal and start an update campaign. The `manifest-tool` can conveniently perform all this in one step. Simple execute:
 
@@ -147,152 +150,15 @@ You can now choose either to perform a full firmware image update or a delta pat
 
     INFO FW version: 0.2.0
     INFO Uploading FW image __x86_x64_NativeLinux_mbedtls/Debug/mbedCloudClientExample.elf
-    INFO Uploaded FW image http://firmware-catalog-media-ca57.s3.dualstack.us-east-1.amazonaws.com/C8Kkvr7VX40kE5lMnBExia
-    INFO Vendor-ID: b7316c2bd3a74aa39feb30692acf2d63
-    INFO Class-ID: 298ac90070eb4337b6adbbf82bbe8471
+    INFO Uploaded FW image http://firmware-catalog-media-ca57.s3.dualstack.us-east-1.amazonaws.com/uPHX9cwDMtxNeLKde4bJW4
+    INFO Vendor-ID: da64439cf2d3433c8a19d844b8e56dc1
+    INFO Class-ID: 67ebb37962224e30a0ed38e5ab5f54d4
+    INFO Attention: When updating Mbed OS devices, candidate features must match the device's bootloader features. Incompatibility may result in damaged devices.
     INFO Created manifest in v3 schema for full update campaign
-    INFO Uploaded manifest ID: 0177439e95060000000000010010002d
-    INFO Created Campaign ID: 0177439e96e200000000000100100399
-    INFO Started Campaign ID: 0177439e96e200000000000100100399
+    INFO Uploaded manifest ID: 017c6e213ce900000000000100100153
+    INFO Created Campaign ID: 017c6e213fae00000000000100100363
+    INFO Started Campaign ID: 017c6e213fae00000000000100100363
     INFO Campaign state: publishing
-    INFO Campaign state: autostopped
-    INFO Campaign is finished in state: autostopped
-    INFO ----------------------------
-    INFO     Campaign Summary
-    INFO ----------------------------
-    INFO  Successfully updated:   1
-    INFO  Failed to update:       0
-    INFO  Skipped:                0
-    INFO  Pending:                0
-    INFO  Total in this campaign: 1
-    ```
-
-    At the console prompt of the virtual demo, notice the firmware update being initiated, then downloaded and applied:
-    ```
-    [FOTA INFO] fota.c:596: Firmware update initiated.
-    [FOTA DEBUG] fota.c:628: Pelion FOTA manifest is valid
-    [FOTA DEBUG] fota.c:651: get manifest : curr version 0, new version 131072
-    [FOTA DEBUG] fota_source_profile_full.cpp:444: Reporting resource: /10252/0/2: value: 3
-    [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 3 type: 0
-    [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 4 type: 0
-    [FOTA DEBUG] fota.c:555: Download Authorization requested
-    [FOTA] ---------------------------------------------------
-    [FOTA] Updating component MAIN from version 0.0.0 to 0.2.0
-    [FOTA] Update priority 0
-    [FOTA] Update size 6562120B
-    [FOTA] ---------------------------------------------------
-    [FOTA] Download authorization granted
-    [FOTA DEBUG] fota_event_handler.c:61: FOTA event-handler got event [type= 4]
-    [FOTA INFO] fota.c:1351: Download authorization granted.
-    [FOTA DEBUG] fota_block_device_linux.c:77: FOTA BlockDevice init file is fota_candidate
-    [FOTA DEBUG] fota.c:1128: FOTA BlockDevice initialized
-    [FOTA DEBUG] fota.c:522: New FOTA key saved
-    [FOTA DEBUG] fota.c:533: FOTA encryption engine initialized
-    [FOTA DEBUG] fota.c:1216: Erasing storage at 0, size 4294967296
-    [FOTA DEBUG] fota_source_profile_full.cpp:444: Reporting resource: /10252/0/2: value: 4
-    [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 3 type: 0
-    [FOTA] Downloading firmware. 0%
-    [FOTA] Downloading firmware. 5%
-    [FOTA] Downloading firmware. 10%
-    [FOTA] Downloading firmware. 15%
-    [FOTA] Downloading firmware. 20%
-    [FOTA] Downloading firmware. 25%
-    [FOTA] Downloading firmware. 30%
-    [FOTA] Downloading firmware. 35%
-    [FOTA] Downloading firmware. 40%
-    [FOTA] Downloading firmware. 45%
-    [FOTA] Downloading firmware. 50%
-    [FOTA] Downloading firmware. 55%
-    [FOTA] Downloading firmware. 60%
-    [FOTA] Downloading firmware. 65%
-    [FOTA] Downloading firmware. 70%
-    [FOTA] Downloading firmware. 75%
-    [FOTA] Downloading firmware. 80%
-    [FOTA] Downloading firmware. 85%
-    [FOTA] Downloading firmware. 90%
-    [FOTA] Downloading firmware. 95%
-    [FOTA] Downloading firmware. 100%
-    [FOTA INFO] fota.c:1509: Firmware download finished
-    [FOTA DEBUG] fota_source_profile_full.cpp:444: Reporting resource: /10252/0/2: value: 6
-    [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 4 type: 0
-    [FOTA DEBUG] fota.c:1460: Install Authorization requested
-    [FOTA] Install authorization granted
-    [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 3 type: 0
-    [FOTA DEBUG] fota_event_handler.c:61: FOTA event-handler got event [type= 4]
-    [FOTA INFO] fota.c:1346: Install authorization granted.
-    [FOTA DEBUG] fota_source_profile_full.cpp:444: Reporting resource: /10252/0/2: value: 7
-    [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 4 type: 0
-    [FOTA INFO] fota.c:804: Installing new version for component MAIN
-    [FOTA INFO] fota_candidate.c:224: Found an encrypted image at address 0x0
-    [FOTA INFO] fota_candidate.c:416: Validating image...
-    [FOTA INFO] fota_candidate.c:461: Image is valid.
-    [FOTA INFO] fota_component.c:189: Installing MAIN component
-    [FOTA] Successfully installed MAIN component
-
-    [FOTA DEBUG] fota_source_profile_full.cpp:444: Reporting resource: /10252/0/2: value: 8
-    [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 3 type: 0
-    Resource(3313/0/5700) automatically updated. Value 6
-    [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 4 type: 0
-    [FOTA INFO] fota.c:725: Rebooting.
-    In single-partition mode.
-    Creating path ./pal
-    Start Device Management Client
-    ```
-
-## Option 2 - Delta updates
-
-
-1. Switch to the main program source directory:
-    ```
-    $ cd /build/mbed-cloud-client-example/
-    ```
-2. Assuming you've modified `main.cpp` as suggested above, we can now proceed and produce the new firmware:
-    ```
-    $ make -C __x86_x64_NativeLinux_mbedtls/ mbedCloudClientExample.elf
-    ```
-3. Copy the new firmware to `firmwares/` directory:
-    ```
-    $ cp __x86_x64_NativeLinux_mbedtls/Debug/mbedCloudClientExample.elf firmwares/new_fw.bin
-    ```
-4. The `firmwares/` directory should now contain both the new firmware(`new_fw.bin`) and the currently running one(`current_fw.bin`):
-    ```
-    $  ls -l firmwares/
-    
-    total 12824
-    -rwxr-xr-x 1 1000 1000 6562120 Jan 27 10:30 current_fw.bin
-    -rwxr-xr-x 1 root root 6562120 Jan 27 10:43 new_fw.bin
-    ```
-5. We are now ready to generate a delta firmware using the `manifest-delta-tool`:
-    ```
-    $ manifest-delta-tool -c firmwares/current_fw.bin -n firmwares/new_fw.bin -o firmwares/delta-patch.bin
-
-    2021-01-27 10:44:30,382 INFO Current tool version PELION/BSDIFF001
-    Wrote diff file firmwares/delta-patch.bin, size 245215. Max undeCompressBuffer frame size was 512, max deCompressBuffer frame size was 189.
-    ```
-    
-    If we list the directory contents, we can verify the producing of the `delta-patch.bin` firmware. Notice the significant shrinkage in size, from 6.3MB of a full firmware image, down to a delta of 240K!
-
-    ```
-    ls -l firmwares/delta-patch.bin
-
-    -rw-r--r-- 1 root root  245215 Jan 27 10:44 delta-patch.bin
-    ```
-
-6. Start the update campaign
-    ```
-    $ manifest-dev-tool update -p firmwares/delta-patch.bin -w -n -v 0.2.0
-
-    INFO FW version: 0.2.0
-    INFO Uploading FW image firmwares/delta-patch.bin
-    INFO Uploaded FW image http://firmware-catalog-media-ca57.s3.dualstack.us-east-1.amazonaws.com/UttMp3crVuNntkxuNobTZI
-    INFO Vendor-ID: d3b2b23d842441739c666ee5cf74e594
-    INFO Class-ID: 90f4bdec6c0e483c8ecec3fbec8ba4fc
-    INFO Created manifest in v3 schema for delta update campaign
-    INFO Uploaded manifest ID: 017743762a0400000000000100100006
-    INFO Created Campaign ID: 017743762bb800000000000100100387
-    INFO Started Campaign ID: 017743762bb800000000000100100387
-    INFO Campaign state: publishing
-    INFO Campaign state: autostopped
     INFO Campaign is finished in state: autostopped
     INFO ----------------------------
     INFO     Campaign Summary 
@@ -304,76 +170,149 @@ You can now choose either to perform a full firmware image update or a delta pat
     INFO  Total in this campaign: 1
     ```
 
-    At the console prompt of the virtual demo, notice that the device logs the downloading of the new firmware, the verification of the manifest and the successful delta update:
+    At the console prompt of the virtual demo, notice the firmware update being initiated, then downloaded and applied. Upon completion the device reboots with the new firmware:
     ```
-    [FOTA INFO] fota.c:596: Firmware update initiated.
-    [FOTA DEBUG] fota.c:628: Pelion FOTA manifest is valid
-    [FOTA DEBUG] fota.c:651: get manifest : curr version 0, new version 131072 
-    [FOTA DEBUG] fota_source_profile_full.cpp:444: Reporting resource: /10252/0/2: value: 3
-    [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 3 type: 0
-    [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 4 type: 0
-    [FOTA DEBUG] fota.c:555: Download Authorization requested
-    [FOTA] ---------------------------------------------------
-    [FOTA] Updating component MAIN from version 0.0.0 to 0.2.0
-    [FOTA] Update priority 0
-    [FOTA] Delta update. Patch size 245215B full image size 6562120B
-    [FOTA] ---------------------------------------------------
-    [FOTA] Download authorization granted
-    [FOTA DEBUG] fota_event_handler.c:61: FOTA event-handler got event [type= 4]
-    [FOTA INFO] fota.c:1351: Download authorization granted.
-    [FOTA DEBUG] fota_block_device_linux.c:77: FOTA BlockDevice init file is fota_candidate
-    [FOTA DEBUG] fota.c:1128: FOTA BlockDevice initialized
-    [FOTA DEBUG] fota.c:522: New FOTA key saved
-    [FOTA DEBUG] fota.c:533: FOTA encryption engine initialized
-    [FOTA DEBUG] fota.c:1216: Erasing storage at 0, size 4294967296
-    [FOTA DEBUG] fota.c:1258: FOTA delta engine initialized
-    [FOTA DEBUG] fota_source_profile_full.cpp:444: Reporting resource: /10252/0/2: value: 4
-    [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 3 type: 0
-    [FOTA] Downloading firmware. 3%
-    [FOTA] Downloading firmware. 9%
-    [FOTA] Downloading firmware. 11%
-    [FOTA] Downloading firmware. 17%
-    [FOTA] Downloading firmware. 22%
-    [FOTA] Downloading firmware. 27%
-    [FOTA] Downloading firmware. 31%
-    [FOTA] Downloading firmware. 35%
-    [FOTA] Downloading firmware. 40%
-    [FOTA] Downloading firmware. 45%
-    [FOTA] Downloading firmware. 54%
-    [FOTA] Downloading firmware. 58%
-    [FOTA] Downloading firmware. 63%
-    [FOTA] Downloading firmware. 68%
-    [FOTA] Downloading firmware. 72%
-    [FOTA] Downloading firmware. 77%
-    [FOTA] Downloading firmware. 82%
-    [FOTA] Downloading firmware. 86%
-    [FOTA] Downloading firmware. 91%
-    [FOTA] Downloading firmware. 96%
-    [FOTA] Downloading firmware. 100%
-    [FOTA INFO] fota.c:1509: Firmware download finished
-    [FOTA DEBUG] fota_source_profile_full.cpp:444: Reporting resource: /10252/0/2: value: 6
-    [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 4 type: 0
-    [FOTA DEBUG] fota.c:1460: Install Authorization requested
-    [FOTA] Install authorization granted
-    [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 3 type: 0
-    [FOTA DEBUG] fota_event_handler.c:61: FOTA event-handler got event [type= 4]
-    [FOTA INFO] fota.c:1346: Install authorization granted.
-    [FOTA DEBUG] fota_source_profile_full.cpp:444: Reporting resource: /10252/0/2: value: 7
-    [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 4 type: 0
-    [FOTA INFO] fota.c:804: Installing new version for component MAIN
-    [FOTA INFO] fota_candidate.c:224: Found an encrypted image at address 0x0
-    [FOTA INFO] fota_candidate.c:416: Validating image...
-    [FOTA INFO] fota_candidate.c:461: Image is valid.
-    [FOTA INFO] fota_component.c:189: Installing MAIN component
+    Firmware download requested (priority=0)
+    Updating component MAIN from version 0.0.0 to 0.2.0
+    Update priority 0
+    Update size 7115144B
+    Downloading firmware. 0%
+    Downloading firmware. 5%
+    Downloading firmware. 10%
+    Downloading firmware. 15%
+    Downloading firmware. 20%
+    Downloading firmware. 25%
+    Downloading firmware. 30%
+    Downloading firmware. 35%
+    Downloading firmware. 40%
+    Downloading firmware. 45%
+    Downloading firmware. 50%
+    Downloading firmware. 55%
+    Downloading firmware. 60%
+    Downloading firmware. 65%
+    Downloading firmware. 70%
+    Downloading firmware. 75%
+    Downloading firmware. 80%
+    Downloading firmware. 85%
+    Downloading firmware. 90%
+    Downloading firmware. 95%
+    Downloading firmware. 100%
+    Resource(3313/0/5700) automatically updated. Value 5
+    Firmware install authorized
     [FOTA] Successfully installed MAIN component
-
-    [FOTA DEBUG] fota_source_profile_full.cpp:444: Reporting resource: /10252/0/2: value: 8
-    [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 3 type: 0
-    [FOTA DEBUG] fota_source_profile_full.cpp:153: Callback for resource: /10252/0/2 status: 4 type: 0
-    [FOTA INFO] fota.c:725: Rebooting.
     In single-partition mode.
     Creating path ./pal
     Start Device Management Client
+    Using hardcoded Root of Trust, not suitable for production use.
+    Starting developer flow
+    Developer credentials already exist, continuing..
+    Generating random from /dev/random, this can take a long time!
+    Finished generating random from /dev/random.
+    Commander initialized and waiting for cmds...
+    Application ready. Build at: Oct  8 2021 11:20:59
+    PDMC version 4.11.0
+    Network initialized, registering...
+    ```
+
+## Option 2 - Delta updates
+
+
+1. Switch to the main program source directory:
+    ```
+    $ cd /build/mbed-cloud-client-example/
+    ```
+2. Assuming you've modified `source/blinky.cpp` as suggested above, we can now proceed and produce the new firmware:
+    ```
+    $ make -C __x86_x64_NativeLinux_mbedtls/ mbedCloudClientExample.elf
+    ```
+3. Copy the new firmware to `firmwares/` directory:
+    ```
+    $ cp __x86_x64_NativeLinux_mbedtls/Debug/mbedCloudClientExample.elf firmwares/new_fw.bin
+    ```
+4. The `firmwares/` directory should now contain both the new firmware(`new_fw.bin`) and the currently running one(`current_fw.bin`):
+    ```
+    $  ls -l firmwares/
+    
+    total 13904
+    -rwxr-xr-x. 1 1000 1000 7115152 Oct 11 07:11 current_fw.bin
+    -rwxr-xr-x. 1 root root 7115152 Oct 11 07:12 new_fw.bin
+    ```
+5. We are now ready to generate a delta firmware using the `manifest-delta-tool`:
+    ```
+    $ manifest-delta-tool -c firmwares/current_fw.bin -n firmwares/new_fw.bin -o firmwares/delta-patch.bin
+
+    2021-10-11 07:13:21,572 INFO Current tool version PELION/BSDIFF001
+    Wrote diff file firmwares/delta-patch.bin, size 180745. Max undeCompressBuffer frame size was 512, max deCompressBuffer frame size was 37.
+    ```
+    
+    If we list the directory contents, we can verify the producing of the `delta-patch.bin` firmware. Notice the significant shrinkage in size, from 6.8MB of a full firmware image, down to a delta of 177K!
+
+    ```
+    ls -l firmwares/delta-patch.bin
+
+    -rw-r--r--. 1 root root  180745 Oct 11 07:13 delta-patch.bin
+    ```
+
+6. Start the update campaign
+    ```
+    $ manifest-dev-tool update -p firmwares/delta-patch.bin -w -n -v 0.2.0
+
+    INFO FW version: 0.2.0
+    INFO Uploading FW image firmwares/delta-patch.bin
+    INFO Uploaded FW image http://firmware-catalog-media-ca57.s3.dualstack.us-east-1.amazonaws.com/iXHsjUj5zJbZ9KTMS1HSXi
+    INFO Vendor-ID: da64439cf2d3433c8a19d844b8e56dc1
+    INFO Class-ID: 67ebb37962224e30a0ed38e5ab5f54d4
+    INFO Attention: When updating Mbed OS devices, candidate features must match the device's bootloader features. Incompatibility may result in damaged devices.
+    INFO Created manifest in v3 schema for delta update campaign
+    INFO Uploaded manifest ID: 017c6e36a8aa00000000000100100161
+    INFO Created Campaign ID: 017c6e36ab5d0000000000010010036a
+    INFO Started Campaign ID: 017c6e36ab5d0000000000010010036a
+    INFO Campaign state: publishing
+    INFO Campaign is finished in state: autostopped
+    2021-10-11 07:17:35,404 INFO ----------------------------
+    2021-10-11 07:17:35,414 INFO     Campaign Summary 
+    2021-10-11 07:17:35,414 INFO ----------------------------
+    2021-10-11 07:17:35,415 INFO  Successfully updated:   1
+    2021-10-11 07:17:35,415 INFO  Failed to update:       0
+    2021-10-11 07:17:35,416 INFO  Skipped:                0
+    2021-10-11 07:17:35,416 INFO  Pending:                0
+    2021-10-11 07:17:35,416 INFO  Total in this campaign: 1
+    ```
+
+    At the console prompt of the virtual demo, notice that the device logs the downloading of the new firmware and the successful delta update:
+    ```
+    Firmware download requested (priority=0)
+    Updating component MAIN from version 0.0.0 to 0.2.0
+    Update priority 0
+    Delta update. Patch size 180745B full image size 7115152B
+    Downloading firmware. 0%
+    Downloading firmware. 7%
+    Downloading firmware. 17%
+    Downloading firmware. 24%
+    Downloading firmware. 25%
+    Downloading firmware. 32%
+    Downloading firmware. 41%
+    Downloading firmware. 50%
+    Downloading firmware. 55%
+    Downloading firmware. 62%
+    Downloading firmware. 68%
+    Downloading firmware. 77%
+    Downloading firmware. 87%
+    Downloading firmware. 96%
+    Downloading firmware. 100%
+    [FOTA] Successfully installed MAIN component
+    In single-partition mode.
+    Creating path ./pal
+    Start Device Management Client
+    Using hardcoded Root of Trust, not suitable for production use.
+    Starting developer flow
+    Developer credentials already exist, continuing..
+    Generating random from /dev/random, this can take a long time!
+    Finished generating random from /dev/random.
+    Commander initialized and waiting for cmds...
+    Application ready. Build at: Oct  8 2021 11:20:59
+    PDMC version 4.11.0
+    Network initialized, registering...
     ```
 
 ## Verifying Firmware Update
@@ -390,9 +329,147 @@ Notice now that the vibration sensor values sent by the device are indeed multip
 
 **Congratulations !**
 
+## Factory Provisioning
+
+All previous examples showcase virtual-demo running in development mode where development certificates are generated and used to connect and authenticate to Pelion device management platform. For production deployments though, the factory provisioning process should be followed. To aid in learning, virtual-demo also supports this mode too. The container image conveniently includes all the required artifacts and services required ([simulated TPM](https://sourceforge.net/projects/ibmswtpm2/), [PARSEC](https://parallaxsecond.github.io/parsec-book/)), assembled together to support a 'simulated' factory provisioning process. 
+
+> NOTE: This section assume you have basic knowledge of how the factory provisioning process works and want to apply this knowledge with the virtual-demo. If not, head over to our [documentation](https://developer.pelion.com/docs/device-management/current/provisioning-process/index.html) page for a brief introduction. Also, worth looking is our end-to-end [factory provisioning tutorial](https://developer.pelion.com/docs/device-management/current/connecting/factory-provisioning-to-firmware-update.html).
+
+### Quickstart
+
+1. Start virtual-demo in 'factory-provisiong' mode.
+    ```
+    docker run -it --name pelion-demo -p 8888:8888 -e FACTORY_PROVISIONING_MODE=ON pelion/virtual-demo
+    ```
+    
+    You should see the [factory-configurator-client](https://developer.pelion.com/docs/device-management-provision/latest/ft-demo/building-demo.html) starting up, then blocks waiting for connections from the [factory-configurator-utility](https://developer.pelion.com/docs/device-management-provision/latest/fcu/index.html):
+    ```
+    INFO:launching in [factory-provisioning] mode..
+
+    INFO:starting 'tpm_server'..
+    INFO:setting up authentication to 'tpm_server'..
+    INFO:starting 'parsec'..
+    Application ready. Build at: Oct  8 2021 11:17:07
+    In single-partition mode.
+    Creating path psa/
+    [INFO][fcc ]: factory_configurator_client.c:84:fcc_init:===> 
+    [INFO][fcc ]: fcc_output_info_handler.c:472:fcc_init_output_info_handler:===> 
+    [INFO][fcc ]: fcc_output_info_handler.c:479:fcc_init_output_info_handler:<=== 
+    [INFO][fcc ]: factory_configurator_client.c:106:fcc_init:<=== 
+
+    Trying receive interface ...
+
+    Client IP Address and Port :  172.17.0.2:8888
+
+    Client is waiting for incoming connection...
+    Factory flow begins...
+    ```
+2. Assumming you have correctly [setup factory-configurator utility](https://developer.pelion.com/docs/device-management-provision/latest/fcu/index.html) in your local machine, you can proceed to inject the configuration to the virtual-demo adjusting accordingly the parameters with your details:
+    ```
+    python3 ft_demo/sources/ft_demo.py inject --endpoint-name=virtual-demo --serial-number=10101 tcp --ip=localhost --port=8888
+    ```
+
+    Once done, the 'factory-configurator-client' should report a successfull provisioning and exit.
+
+    ```
+    Factory flow begins...
+    [INFO][fcc ]: factory_configurator_client.c:152:fcc_storage_delete:===> 
+    [INFO][fcc ]: key_config_manager.c:75:kcm_finalize:===> 
+    [INFO][fcc ]: key_config_manager.c:96:kcm_finalize:<=== 
+    [INFO][fcc ]: storage_psa.cpp:822:storage_factory_item_delete:===> item name = mbed.BootstrapDevicePrivateKey len = 30
+    [INFO][fcc ]: key_config_manager.c:37:kcm_init:===> 
+    [INFO][fcc ]: storage_psa.cpp:256:storage_build_item_name:<=== 
+    [INFO][fcc ]: storage_psa.cpp:520:storage_rbp_read:===> item name =  saved_time
+    [INFO][fcc ]: storage_psa.cpp:256:storage_build_item_name:<=== 
+    [INFO][fcc ]: storage_psa.cpp:520:storage_rbp_read:===> item name =  last_time_back
+    [INFO][fcc ]: storage_psa.cpp:256:storage_build_item_name:<=== 
+    [INFO][fcc ]: key_config_manager.c:66:kcm_init:<=== 
+    [INFO][fcc ]: storage_psa.cpp:762:storage_get_item_name_for_deleting:===> item name = mbed.BootstrapDevicePrivateKey len = 30
+    [INFO][fcc ]: storage_psa.cpp:256:storage_build_item_name:<=== 
+    [INFO][fcc ]: factory_configurator_client.c:163:fcc_storage_delete:<=== 
+    Storage is erased
+    [INFO][fcc ]: fcc_bundle_handler.c:279:fcc_bundle_handler:===> encoded_blob_size = 2134
+    [INFO][fcc ]: fcc_output_info_handler.c:484:fcc_clean_output_info_handler:===> 
+    [INFO][fcc ]: fcc_output_info_handler.c:496:fcc_clean_output_info_handler:<=== 
+    [INFO][fcc ]: key_config_manager.c:37:kcm_init:===> 
+    [INFO][fcc ]: key_config_manager.c:66:kcm_init:<=== 
+    [INFO][fcc ]: factory_configurator_client.c:289:fcc_is_factory_disabled:===> 
+    [INFO][fcc ]: storage_psa.cpp:520:storage_rbp_read:===> item name =  factory_done
+    [INFO][fcc ]: storage_psa.cpp:256:storage_build_item_name:<=== 
+    [INFO][fcc ]: factory_configurator_client.c:294:fcc_is_factory_disabled:pal_status:-63, factory_disable_flag:0
+
+    [INFO][fcc ]: factory_configurator_client.c:300:fcc_is_factory_disabled:<=== 
+    [INFO][fcc ]: fcc_bundle_handler.c:360:fcc_bundle_handler: key name SchemeVersion
+    [INFO][fcc ]: fcc_bundle_handler.c:360:fcc_bundle_handler: key name Keys
+    [INFO][fcc ]: key_config_manager.c:111:kcm_item_store:===> 
+    ...
+    ...
+    ...
+    [INFO][fcc ]: factory_configurator_client.c:143:fcc_finalize:<=== 
+    Successfully completed factory flow
+    INFO:[factory-provisioning] completed successfully, please start virtual-demo with 'docker start -a pelion-demo'..
+    ```
+
+3. You can now start virtual-demo in production-mode:
+    ```
+    docker start -a pelion-demo
+    ```
+
+    You should see virtual-demo starting up, connecting to the platform:
+
+    ```
+    INFO:launching in [factory-provisioning] mode..
+
+    INFO:starting 'tpm_server'..
+    INFO:starting 'parsec'..
+    INFO:[factory-provisioning] has already occurred, starting 'virtual-demo' in production mode..
+    DEBUG:Using selector: EpollSelector
+    DEBUG:Using selector: EpollSelector
+    In single-partition mode.
+    Creating path psa/
+    Start Device Management Client
+    Commander initialized and waiting for cmds...
+    Application ready. Build at: Oct  6 2021 12:30:07
+    PDMC version 4.11.0
+    Network initialized, registering...
+    Add sub components
+    Client registered
+    Endpoint Name: virtual-demo
+    Device ID: 017be3e8875cd285fba5223800000000
+    ```
+
+### Notes on firmware update
+
+The process of firmware updates in production-mode is similar to development-mode with some subtle differences:
+
+1. Prior to compiling the new firmware you should:
+    
+    a) Comment `DMBED_CONF_APP_DEVELOPER_MODE` in [define.txt](https://github.com/PelionIoT/virtual-demo-for-pelion/blob/master/mbed-cloud-client-example/define.txt#L39), so the firmware is built in production-mode.
+
+    b) Pass the `PARSEC_TPM_SUPPORT=ON` and use [define_linux_psa.txt](https://github.com/PelionIoT/virtual-demo-for-pelion/blob/master/mbed-cloud-client-example/define_linux_psa.txt) as parameter to `DEXTERNAL_DEFINE_FILE`
+
+    In a nutshell, the following series of commands should be used:
+    ```
+    $ # remove the existing (dev) firmware build artifacts inside the container
+    $ rm -rf __x86_x64_NativeLinux_mbedtls/Debug/
+
+    $ # deploy dependencies
+    $ python3 pal-platform/pal-platform.py deploy --target=x86_x64_NativeLinux_mbedtls generate
+    
+    $ # generate cmake files
+    $ cd __x86_x64_NativeLinux_mbedtls
+    $ cmake -G "Unix Makefiles" -DPARSEC_TPM_SE_SUPPORT=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=./../pal-platform/Toolchain/GCC/GCC.cmake -DEXTERNAL_DEFINE_FILE=./../define_linux_psa.txt
+    
+    $ # start the build
+    $ make mbedCloudClientExample.elf
+    
+2. Since we are not using the `manifest-dev-tool` in production-mode to auto-create the underlying dev certs and config files, we need to manually create and sign the manifest, upload the firmware and manifest to Pelion portal and start the update campaign. Follow the instructions in our [documentation](https://developer.pelion.com/docs/device-management/current/connecting/update-your-device-s-firmware-image.html) page for more information on applying firmware updates in production-mode.
+
+3. The Linux firmware binary generated by the build is rather large(40+ MB), so we suggest to opt for a Delta update directly. The precompiled production running firmware is located in `/build/mbed-cloud-client-example-production/` inside the docker image to use it as the parameter ('`-c`') with the `manifest-delta-tool`.  
+
 
 ## Technical overview
-The demo has been implemented to be run in 2 parts
+The demo has been implemented to be run in 2 parts:
 1) an instance of the Pelion device management client built with your certificate that writes sensor values to the Linux message queue running inside the docker container
 2) a graphical representation (GUI) of a device that picks up the sensor values from the queue and displays values in a "fake device" so that conversations about managed devices can take place.
 
